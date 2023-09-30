@@ -2,16 +2,20 @@ import chalk from 'chalk'
 
 const log = console.log
 export class Logx {
-    static error(str: string) {
-        log(chalk.bold.redBright(str))
+    static error(...v: any[]) {
+        log(chalk.bold.redBright(v))
     }
 
-    static success(str: string) {
-        log(chalk.bold.greenBright(str))
+    static success(...v: any[]) {
+        log(chalk.bold.greenBright(v))
     }
 
-    static info(str: string) {
-        log(chalk.bold.bgBlack.white(str))
+    static debug(...v: any[]) {
+        log(chalk.bold.grey(v))
+    }
+
+    static info(...v: any[]) {
+        log(chalk.bold.blackBright(v))
     }
 
 }
