@@ -1,6 +1,7 @@
 import chalk from 'chalk'
 
-const log = console.log
+const log = console.log;
+const stdOut = process.stdout.write.bind(process.stdout);
 export class Logx {
     static error(...v: any[]) {
         log(chalk.bold.redBright(v))
@@ -16,6 +17,10 @@ export class Logx {
 
     static info(...v: any[]) {
         log(chalk.bold.blackBright(v))
+    }
+
+    static infoStdout(...v: any[]) {
+        stdOut(chalk.bold.blackBright(v))
     }
 
 }

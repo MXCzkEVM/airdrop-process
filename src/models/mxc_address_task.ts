@@ -11,6 +11,10 @@ MXCAddressTaskModel.init({
     },
     address: DataTypes.TEXT,
     task_id: DataTypes.INTEGER,
+    times: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+    }
 },{
     sequelize: DB,
     modelName: 'mxc_address_tasks',

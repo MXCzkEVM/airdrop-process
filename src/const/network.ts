@@ -1,9 +1,9 @@
 import {ethers} from "ethers";
 import {MXCMarketplace} from "../../typechain-types/contracts/MXCMarketPlace.sol";
 
-const MXC_L2_RPC_URL = "https://rpc.mxc.com"
+const MXC_L2_RPC_URL = "http://localhost:8545"
 
-const MXC_Wannsee_RPC_URL = "https://wannsee-rpc.mxc.com"
+const MXC_Wannsee_RPC_URL = "http://localhost:28545"
 
 const Ethereum_RPC_URL = "https://lingering-blissful-ensemble.quiknode.pro/5363f59e6577b507039b7ad2159b9fe46d9a534b/"
 

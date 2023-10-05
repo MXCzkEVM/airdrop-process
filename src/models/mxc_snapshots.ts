@@ -1,16 +1,16 @@
 import {DB} from "../db";
 import {DataTypes, Model} from "sequelize";
 
-export class MXCSnapShots extends Model {}
+export class MXCSnapShotsModel extends Model {}
 
-MXCSnapShots.init({
+MXCSnapShotsModel.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true
     },
     address: DataTypes.TEXT,
-    tasks: DataTypes.JSON,
+    tasks: DataTypes.TEXT,
     zks_sum: DataTypes.INTEGER,
 },{
     sequelize: DB,

@@ -1,9 +1,9 @@
 import {DB} from "../db";
 import {DataTypes, Model} from "sequelize";
 
-export class MXCTasks extends Model {}
+export class MXCTasksModel extends Model {}
 
-MXCTasks.init({
+MXCTasksModel.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,

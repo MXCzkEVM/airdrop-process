@@ -1,4 +1,5 @@
 import {Logx} from "../log";
+import moment from 'moment-timezone';
 import {
     ContractAddr,
     ContractType,
@@ -20,6 +21,8 @@ import {getHexagonAddresses, processHexagonBalance} from "./processHexagonBalanc
 import {getERC20Addresses, processERC20Balance} from "./processERC20Balance";
 import {BigNumber} from "ethers";
 import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
+import {MXCSnapShotsModel} from "../models/mxc_snapshots";
+import {MXCTasksModel} from "../models/mxc_tasks";
 
 export let addresses:Map<string, MXCAddressesModel> = new Map();
 
@@ -40,7 +43,7 @@ class Tasks {
      static processTask2 = async () => {
         const monthSeconds = 2592000;
         for(const address of addresses.keys()) {
-            const between = addresses.get(address).get().last_transaction_time - addresses.get(address).get().first_transaction_time
+            const between = moment(addresses.get(address).dataValues.last_transaction_time).unix() - moment(addresses.get(address).dataValues.first_transaction_time).unix()
             if(between > 2*monthSeconds) {
                 await MXCAddressTaskModel.findOrCreate({
                     where: {address: address, task_id: 2},
@@ -83,7 +86,7 @@ class Tasks {
      //More than N dApp interactions
      static processTask9 = async() => {
         for(const address of addresses.keys()) {
-            const dapp_interactions = addresses.get(address).get().dapp_interactions
+            const dapp_interactions = addresses.get(address).get().dapp_interactions || [];
             if(dapp_interactions.length >= 2) {
                 await MXCAddressTaskModel.findOrCreate({
                     where: {address: address, task_id: 9},
@@ -276,12 +279,14 @@ class Tasks {
     // moon token
     static processTask42 = async() => {
         for(const address of addresses.keys()) {
-            // TODO: 5+points
             const balance = await processERC20Balance(ContractAddr.MXCWannsee[ContractType.MOONToken], WannseeProvider, address);
 
-            if(balance.gt(BigNumber.from(0))) {
+            if(balance.gte(BigNumber.from(1e18))) {
                 await MXCAddressTaskModel.findOrCreate({
                     where: {address: address, task_id: 42},
+                    defaults: {
+                        times: balance.div(BigNumber.from(1e18)).toNumber()
+                    }
                 })
             }
         }
@@ -358,12 +363,6 @@ class Tasks {
 }
 
 export const processTask = async (taskID: number) => {
-    if(addresses.size === 0) {
-        const all = await MXCAddressesModel.findAll()
-        for(let i = 0; i < all.length; i++) {
-            addresses.set(all[i].get().address, all[i])
-        }
-    }
     await syncMXCL2Addresses();
     // @ts-ignore
     if(Tasks[`processTask${taskID}`] !== undefined) {
@@ -402,6 +401,15 @@ const wannseeDAPPContracts = {
     [ContractAddr.MXCWannsee[ContractType.MXCERC20L2Bridge]]: "BridgeL2_L1"
 }
 
+const init = async() => {
+    if(addresses.size === 0) {
+        const all = await MXCAddressesModel.findAll()
+        for(let i = 0; i < all.length; i++) {
+            addresses.set(all[i].get().address, all[i])
+        }
+    }
+}
+
 export const syncMXCL2Addresses = async() => {
     let startBlockNumber = 1;
     const lastOne = await MXCAddressesModel.findOne({
@@ -414,25 +422,31 @@ export const syncMXCL2Addresses = async() => {
     Logx.info("Sync MXCL2 Addresses from", startBlockNumber)
     let latestBlockNumber = await MXCL2Provider.getBlockNumber();
 
+    const mainnetAddresses = Object.keys(mainnetDAPPContracts).map(item => item.toLowerCase())
     for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
+        Logx.infoStdout(`\r sync ${i}/${latestBlockNumber}`);
         const block = await MXCL2Provider.getBlockWithTransactions(i);
 
+        if(!block || !block.transactions) continue;
         for (const transaction of block.transactions) {
             const fromAddress = transaction.from;
             const toAddress = transaction.to;
             const [addr,created] = await MXCAddressesModel.findOrCreate({
                 where: {address: fromAddress},
                 defaults: {
+                    first_transaction_time: moment(block.timestamp).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
                     block_number: i
                 }
             })
-            addresses.set(addr.get().address, addr)
 
-            const dapp_interactions = JSON.parse(addr.get().dapp_interactions || '[]')
+            const dapp_interactions = JSON.parse(addr.get().dapp_interactions || '[]');
             if(toAddress) {
-                if(Object.keys(mainnetDAPPContracts).includes(toAddress.toLowerCase())) {
-                    for(let i = 0; i < Object.keys(mainnetDAPPContracts).length; i++) {
-                        if(Object.keys(mainnetDAPPContracts)[i].toLowerCase() === toAddress.toLowerCase()) {
+                if(mainnetAddresses.includes(toAddress.toLowerCase())) {
+                    for(let i = 0; i < mainnetAddresses.length; i++) {
+                        if(mainnetAddresses[i] !== toAddress.toLowerCase()) {
+                            continue;
+                        }
+                        if(!dapp_interactions.includes(Object.values(mainnetDAPPContracts)[i])) {
                             dapp_interactions.push(Object.values(mainnetDAPPContracts)[i])
                         }
                     }
@@ -445,10 +459,14 @@ export const syncMXCL2Addresses = async() => {
             addr.set('transaction_aggregate_value_mxc', transactionAggregateValueMXC.add(receipt.gasUsed.mul(transaction.gasPrice)).toString())
             addr.set('block_number', i)
             addr.set('dapp_interactions',JSON.stringify(dapp_interactions))
-            addr.set('last_transaction_time', block.timestamp);
+            addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'));
             await addr.save();
+            addresses.set(addr.get().address, addr)
         }
     }
+
+    return;
+    const wannseeAddresses = Object.keys(wannseeDAPPContracts).map(item => item.toLowerCase())
 
     const wannseelastOne = await MXCAddressesModel.findOne({
         order: Sequelize.literal('block_number DESC'),
@@ -459,8 +477,11 @@ export const syncMXCL2Addresses = async() => {
     }
     latestBlockNumber = await WannseeProvider.getBlockNumber();
     for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
+        Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`);
+
         const block = await MXCL2Provider.getBlockWithTransactions(i);
 
+        if(!block || !block.transactions) continue;
         for (const transaction of block.transactions) {
             const fromAddress = transaction.from;
             const toAddress = transaction.to;
@@ -470,26 +491,29 @@ export const syncMXCL2Addresses = async() => {
                     testnet_block_number: i,
                 }
             })
-            addresses.set(addr.get().address, addr)
-
-            const dapp_interactions = JSON.parse(addr.get().dapp_interactions || '[]')
+            const testnet_dapp_interactions = JSON.parse(addr.get().testnet_dapp_interactions || '[]')
             if(toAddress) {
-                for(let i = 0; i < Object.keys(wannseeDAPPContracts).length; i++) {
-                    if(Object.keys(wannseeDAPPContracts)[i].toLowerCase() === toAddress.toLowerCase()) {
-                        dapp_interactions.push(Object.values(mainnetDAPPContracts)[i])
+                if(wannseeAddresses.includes(toAddress.toLowerCase())) {
+                    for (let i = 0; i < wannseeAddresses.length; i++) {
+                        if (wannseeAddresses[i] === toAddress.toLowerCase()) {
+                            testnet_dapp_interactions.push(Object.values(wannseeDAPPContracts)[i])
+                        }
                     }
                 }
             }
 
             addr.set('testnet_block_number', i)
-            addr.set('testnet_dapp_interactions',JSON.stringify(dapp_interactions))
+            addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
             await addr.save();
+            addresses.set(addr.get().address, addr)
         }
     }
 
 }
 
-export const processAllTasks = async() => {
+
+export const processAll = async() => {
+    await init();
     await Tasks.processTask1();
     await Tasks.processTask2();
     await Tasks.processTask5();
@@ -508,5 +532,40 @@ export const processAllTasks = async() => {
     await Tasks.processTask47();
     await Tasks.processTask49();
 
-    // todo: regenerate snapshot
+    await generateSnapshots();
 }
+
+export const generateSnapshots = async() => {
+    await init();
+    Logx.info("Start generate snapshot")
+    const length = addresses.size;
+    const i = 0;
+
+    const tasks = await MXCTasksModel.findAll();
+    const tasksMap = new Map();
+    for(let i = 0; i < tasks.length; i++) {
+        tasksMap.set(tasks[i].get().id, tasks[i].get())
+    }
+    for (const address of addresses.keys()) {
+        Logx.infoStdout(`\r snapshots ${i}/${length}`);
+        const [addrSnapShot,find] = await MXCSnapShotsModel.findOrCreate({
+            where: {address: address},
+        })
+        const addrTasks = [];
+        const taskIDs = await MXCAddressTaskModel.findAll({
+            where: {address: address}
+        })
+        let zks_sum = 0;
+        for(const taskIDRecord of taskIDs) {
+            addrTasks.push(taskIDRecord.get().task_id);
+            zks_sum += tasksMap.get(taskIDRecord.get().task_id).zks * taskIDRecord.get().times;
+        }
+
+        addrSnapShot.set('tasks', JSON.stringify(addrTasks));
+        addrSnapShot.set('zks_sum', zks_sum);
+        await addrSnapShot.save();
+
+    }
+    Logx.success("Generate snapshot finished")
+}
+

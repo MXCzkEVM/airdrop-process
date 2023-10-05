@@ -1,5 +1,5 @@
 import {program} from 'commander'
-import {processAllTasks, processTask, syncMXCL2Addresses} from "./tasks";
+import {generateSnapshots, processAll, processTask, syncMXCL2Addresses} from "./tasks";
 import {DB} from "./db";
 
 program
@@ -15,11 +15,16 @@ program.name("sync MXC L2 addresses")
     .action(syncMXCL2Addresses)
     .version("0.1.0")
 
-program.name("process All task")
+program.name("process all")
     .command("processAll")
     .description("process All task")
-    .action(processAllTasks)
+    .action(processAll)
     .version("0.1.0")
 
+program.name("generate snapshot")
+    .command("snapshot")
+    .description("generate or update snapshots")
+    .action(generateSnapshots)
+    .version("0.1.0")
 
 program.parse();
