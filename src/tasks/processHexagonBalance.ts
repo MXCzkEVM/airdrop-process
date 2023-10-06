@@ -1,6 +1,6 @@
 
 
-import {MEP1002NamingToken__factory} from "../../typechain-types";
+import {ERC721__factory, MEP1002NamingToken__factory} from "../../typechain-types";
 import {generateBlockRanges} from "../uitls";
 import {Provider} from "@ethersproject/providers";
 import {Logx} from "../log";
@@ -33,5 +33,5 @@ export async function getHexagonAddresses(addr: string, provider: Provider) {
 }
 export async function processHexagonBalance(addr: string, provider: Provider, owner: string) {
     const contract = MEP1002NamingToken__factory.connect(addr, provider);
-    return Number(contract.balanceOf(owner));
+    return Number(await contract.balanceOf(owner));
 }

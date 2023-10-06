@@ -9,7 +9,7 @@ export async function getMXCSwapAddresses() {
         skip = i * 1000;
         const res = await queryClient.request(`
         query users {
-          users(where: {id_not: 0},first: 1000, skip:${skip}) {
+          users(first: 1000, skip:${skip}) {
             id
           }
         }`) as unknown as {
@@ -29,7 +29,7 @@ export default async function (address: string) {
       mints(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
         amountUSD
       }
-    }`) as unknown as {
+    }`, {user: address.toLowerCase()}) as unknown as {
         mints: {
             amountUSD: number
         }[]

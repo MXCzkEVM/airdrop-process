@@ -5,14 +5,11 @@ export const mnsMainnetGraphClient = new GraphQLClient("https://mxc-graph.mxc.co
 export const mnsWannseeGraphClient = new GraphQLClient("https://mxc-graph.mxc.com/subgraphs/name/mnsdomains/mns");
 
 export async function getMNSAddresses(client: GraphQLClient) {
-    const res = await client.request(`query getNames($id: ID!) {
-        wrappedDomains(where: {owner: $id},first: 1000) {
-          domain {
-            id
-            labelName
-            labelhash
-            name
-          }
+    const res = await client.request(`query getNames {
+        wrappedDomains(first: 1000) {
+            owner {
+              id
+            }
         }
     }`) as unknown as {
         wrappedDomains: {
@@ -35,9 +32,11 @@ export default async function (client: GraphQLClient, address: string) {
             name
           }
         }
-    }`, {id: address}) as unknown as {
+    }`, {id: address.toLowerCase()}) as unknown as {
         wrappedDomains: {
-            labelName: string
+            domain: {
+                labelName: string
+            }
         }[]
     }
     return res.wrappedDomains
