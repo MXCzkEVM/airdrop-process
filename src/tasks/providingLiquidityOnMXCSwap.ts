@@ -10,9 +10,9 @@ export default async function (address: string) {
         amountUSD
       }
     }`) as unknown as {
-        swaps: {
+        mints: {
             amountUSD: number
         }[]
     }
-    return res.swaps.reduce((prev,curr) => prev + curr.amountUSD, 0)
+    return res.mints.reduce((prev,curr) => prev + curr.amountUSD, 0)
 }
