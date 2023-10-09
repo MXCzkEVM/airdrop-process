@@ -179,7 +179,7 @@ class Tasks {
         }
         for(let i = 0; i < addresses.length; i++) {
             const tradeVolumnUSD = await tradeVolumnOnMXCSwap(addresses[i])
-            const tradeMXC = tradeVolumnUSD / 0.02
+            const tradeMXC = tradeVolumnUSD
             for(const amount of Object.keys(taskIds)) {
                 if(tradeMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
@@ -227,7 +227,7 @@ class Tasks {
         }
         for(let i = 0; i < addresses.length; i++) {
             const lpUSD = await tradeVolumnOnMXCSwap(addresses[i])
-            const lpMXC = lpUSD / 0.02
+            const lpMXC = lpUSD
             for(const amount of Object.keys(taskIds)) {
                 if(lpMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
@@ -524,6 +524,8 @@ export const syncMXCL2Addresses = async() => {
 
 export const processAll = async() => {
     await init();
+    await MXCAddressTaskModel.truncate();
+    await MXCSnapShotsModel.truncate();
     await Tasks.processTask1();
     await Tasks.processTask2();
     await Tasks.processTask5();

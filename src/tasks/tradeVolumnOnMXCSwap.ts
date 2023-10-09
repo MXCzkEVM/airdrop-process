@@ -25,8 +25,8 @@ export async function getMXCSwapAddresses() {
 
 export default async function (address: string) {
     const res = await queryClient.request(`
-    query mints($user: Bytes!) {
-      mints(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
+    query transactions($user: Bytes!) {
+      swaps(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
         amountUSD
       }
     }`, {user: address.toLowerCase()}) as unknown as {

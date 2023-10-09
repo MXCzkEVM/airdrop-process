@@ -5,8 +5,8 @@ const queryClient = new GraphQLClient("https://mxc-graph.mxc.com/subgraphs/name/
 
 export default async function (address: string) {
     const res = await queryClient.request(`
-    query transactions($user: Bytes!) {
-      swaps(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
+    query mints($user: Bytes!) {
+      mints(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
         amountUSD
       }
     }`) as unknown as {
