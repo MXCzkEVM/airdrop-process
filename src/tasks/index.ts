@@ -23,6 +23,7 @@ import {BigNumber} from "ethers";
 import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
 import {MXCSnapShotsModel} from "../models/mxc_snapshots";
 import {MXCTasksModel} from "../models/mxc_tasks";
+import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 
 export let addresses:Map<string, MXCAddressesModel> = new Map();
 
@@ -226,7 +227,7 @@ class Tasks {
             50000000: 37
         }
         for(let i = 0; i < addresses.length; i++) {
-            const lpUSD = await tradeVolumnOnMXCSwap(addresses[i])
+            const lpUSD = await providingLiquidityOnMXCSwap(addresses[i])
             const lpMXC = lpUSD / 0.02
             for(const amount of Object.keys(taskIds)) {
                 if(lpMXC >= Number(amount)) {

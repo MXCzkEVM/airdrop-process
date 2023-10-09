@@ -26,7 +26,7 @@ export async function getMXCSwapAddresses() {
 export default async function (address: string) {
     const res = await queryClient.request(`
     query transactions($user: Bytes!) {
-      swaps(orderBy: timestamp, orderDirection: desc, where: {to: $user}) {
+      swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user}) {
         amountUSD
       }
     }`, {user: address.toLowerCase()}) as unknown as {
