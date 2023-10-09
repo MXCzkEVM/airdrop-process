@@ -11,8 +11,8 @@ export default async function (address: string) {
       }
     }`,{user: address.toLowerCase()}) as unknown as {
         mints: {
-            amountUSD: number
+            amountUSD: string
         }[]
     }
-    return res.mints.reduce((prev,curr) => prev + curr.amountUSD, 0)
+    return res.mints.reduce((prev,curr) => prev + Number(curr.amountUSD), 0)
 }

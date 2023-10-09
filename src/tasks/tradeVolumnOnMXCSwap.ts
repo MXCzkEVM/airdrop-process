@@ -31,8 +31,8 @@ export default async function (address: string) {
       }
     }`, {user: address.toLowerCase()}) as unknown as {
         swaps: {
-            amountUSD: number
+            amountUSD: string
         }[]
     }
-    return res.swaps.reduce((prev,curr) => prev + curr.amountUSD, 0)
+    return res.swaps.reduce((prev,curr) => prev + Number(curr.amountUSD), 0)
 }
