@@ -9,9 +9,7 @@ export default async function (address: string) {
       mints(orderBy: timestamp, orderDirection: desc, where: {from: $user}) {
         amountUSD
       }
-    }`, {
-        user: address.toLowerCase()
-    }) as unknown as {
+    }`,{user: address.toLowerCase()}) as unknown as {
         mints: {
             amountUSD: number
         }[]
