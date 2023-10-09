@@ -2,13 +2,14 @@ import {GraphQLClient} from "graphql-request";
 import {BigNumber} from "ethers";
 
 const queryClient = new GraphQLClient("https://mxc-graph.mxc.com/subgraphs/name/ianlapham/uniswap-v2-dev");
-export default async function (address: string, pair: string) {
+export default async function (address: string, pairs: string[]) {
     const res = await queryClient.request(`
-    query mints($user: Bytes!, $pair: Bytes!) {
-      mints(orderBy: timestamp, orderDirection: desc, where: {to: $user, pair: $pair}) {
+    query mints($user: Bytes!, $pairs: [Bytes!]) {
+      mints(orderBy: timestamp, orderDirection: desc, where: {to: $user, pair_in: $pairs}) {
         amountUSD,
+    \t\tto
       }
-}`,{user: address.toLowerCase(), pair: pair.toLowerCase()}) as unknown as {
+}`,{user: address.toLowerCase(), pairs: pairs.map(item => item.toLowerCase())}) as unknown as {
         mints: {
             amountUSD: string
         }[]

@@ -215,7 +215,7 @@ class Tasks {
         }
     }
 
-    // providing MXC/XSD liquidity MXC 33-37
+    // providing MXC/XSD, MXC/XMXC liquidity MXC 33-37
     static processTask33 = async() => {
         let taskIds = {
             100000: 33,
@@ -225,7 +225,7 @@ class Tasks {
             50000000: 37
         }
         for(const address of addresses.keys()) {
-            const lpUSD = await providingLiquidityOnMXCSwap(address,"0xb6b9be6e9645ede1e92e5c4a8b9f21cf09c43207")
+            const lpUSD = await providingLiquidityOnMXCSwap(address,["0xb6b9be6e9645ede1e92e5c4a8b9f21cf09c43207","0x0079e51773f3cd803188119b7bf18a415fbc53b4"])
             const lpMXC = lpUSD / 0.02
             for(const amount of Object.keys(taskIds)) {
                 if(lpMXC >= Number(amount)) {
