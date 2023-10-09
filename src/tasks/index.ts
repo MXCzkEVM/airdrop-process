@@ -170,7 +170,6 @@ class Tasks {
 
     // trade volume mxc swap 23-27
     static processTask23 = async() => {
-        const addresses = await getMXCSwapAddresses()
         let taskIds = {
             500000: 23,
             2500000: 24,
@@ -178,14 +177,14 @@ class Tasks {
             10000000: 26,
             25000000: 27
         }
-        for(let i = 0; i < addresses.length; i++) {
-            const tradeVolumnUSD = await tradeVolumnOnMXCSwap(addresses[i])
+        for(const address of addresses.keys()) {
+            const tradeVolumnUSD = await tradeVolumnOnMXCSwap(address)
             const tradeMXC = tradeVolumnUSD / 0.02
             for(const amount of Object.keys(taskIds)) {
                 if(tradeMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
                     await MXCAddressTaskModel.findOrCreate({
-                        where: {address: addresses[i], task_id: taskId},
+                        where: {address: address, task_id: taskId},
                     })
                 }
             }
@@ -218,7 +217,6 @@ class Tasks {
 
     // providing liquidity MXC 33-37
     static processTask33 = async() => {
-        const addresses = await getMXCSwapAddresses();
         let taskIds = {
             100000: 33,
             500000: 34,
@@ -226,14 +224,14 @@ class Tasks {
             20000000: 36,
             50000000: 37
         }
-        for(let i = 0; i < addresses.length; i++) {
-            const lpUSD = await providingLiquidityOnMXCSwap(addresses[i])
+        for(const address of addresses.keys()) {
+            const lpUSD = await providingLiquidityOnMXCSwap(address)
             const lpMXC = lpUSD / 0.02
             for(const amount of Object.keys(taskIds)) {
                 if(lpMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
                     await MXCAddressTaskModel.findOrCreate({
-                        where: {address: addresses[i], task_id: taskId},
+                        where: {address: address, task_id: taskId},
                     })
                 }
             }
