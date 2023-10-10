@@ -19,7 +19,7 @@ import {parseEther} from "ethers/lib/utils";
 import tradeVolumnOnMXCSwap, {getMXCSwapAddresses} from "./tradeVolumnOnMXCSwap";
 import {getHexagonAddresses, processHexagonBalance} from "./processHexagonBalance";
 import {getERC20Addresses, processERC20Balance} from "./processERC20Balance";
-import {BigNumber} from "ethers";
+import {BigNumber, ethers} from "ethers";
 import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
 import {MXCSnapShotsModel} from "../models/mxc_snapshots";
 import {MXCTasksModel} from "../models/mxc_tasks";
@@ -109,17 +109,17 @@ class Tasks {
         for(let i = 0; i < addresses.length; i++) {
             const mns = await acquiringMNS(mnsMainnetGraphClient,addresses[i])
             await MXCAddressTaskModel.findOrCreate({
-                where: {address: addresses[i], task_id: 11},
+                where: {address: ethers.utils.getAddress(addresses[i]), task_id: 11},
             })
             if(mns.length >= 3) {
                 await MXCAddressTaskModel.findOrCreate({
-                    where: {address: addresses[i], task_id: 12},
+                    where: {address: ethers.utils.getAddress(addresses[i]), task_id: 12},
                 })
             }
             for(let j = 0; j < mns.length; j++) {
                 if(mns[j].domain.labelName !== "" && mns[j].domain.labelName.length <= 4) {
                     await MXCAddressTaskModel.findOrCreate({
-                        where: {address: addresses[i], task_id: 13},
+                        where: {address: ethers.utils.getAddress(addresses[i]), task_id: 13},
                     })
                 }
             }
@@ -253,7 +253,7 @@ class Tasks {
                 if(balance >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
                     await MXCAddressTaskModel.findOrCreate({
-                        where: {address: addresses[i], task_id: taskId},
+                        where: {address: ethers.utils.getAddress(addresses[i]), task_id: taskId},
                     })
                 }
             }
@@ -269,7 +269,7 @@ class Tasks {
 
             if(balance.gte(BigNumber.from(1000).mul(BigNumber.from(10).pow(18)))) {
                 await MXCAddressTaskModel.findOrCreate({
-                    where: {address: addresses[i], task_id: 41},
+                    where: {address: ethers.utils.getAddress(addresses[i]), task_id: 41},
                 })
             }
         }
@@ -351,11 +351,11 @@ class Tasks {
         for(let i = 0; i < addresses.length; i++) {
             const mns = await acquiringMNS(mnsWannseeGraphClient,addresses[i])
             await MXCAddressTaskModel.findOrCreate({
-                where: {address: addresses[i], task_id: 49},
+                where: {address: ethers.utils.getAddress(addresses[i]), task_id: 49},
             })
             if(mns.length >= 3) {
                 await MXCAddressTaskModel.findOrCreate({
-                    where: {address: addresses[i], task_id: 50},
+                    where: {address: ethers.utils.getAddress(addresses[i]), task_id: 50},
                 })
             }
         }
