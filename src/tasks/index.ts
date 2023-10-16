@@ -179,7 +179,7 @@ class Tasks {
         }
         for(const address of addresses.keys()) {
             const tradeVolumnUSD = await tradeVolumnOnMXCSwap(address)
-            const tradeMXC = tradeVolumnUSD / 0.02
+            const tradeMXC = tradeVolumnUSD
             for(const amount of Object.keys(taskIds)) {
                 if(tradeMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
@@ -226,7 +226,7 @@ class Tasks {
         }
         for(const address of addresses.keys()) {
             const lpUSD = await providingLiquidityOnMXCSwap(address,["0xb6b9be6e9645ede1e92e5c4a8b9f21cf09c43207","0x0079e51773f3cd803188119b7bf18a415fbc53b4"])
-            const lpMXC = lpUSD / 0.02
+            const lpMXC = lpUSD
             for(const amount of Object.keys(taskIds)) {
                 if(lpMXC >= Number(amount)) {
                     const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
