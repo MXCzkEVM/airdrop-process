@@ -24,15 +24,24 @@ export async function getMXCSwapAddresses() {
 }
 
 export default async function (address: string) {
-    const res = await queryClient.request(`
-    query transactions($user: Bytes!) {
-      swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user}) {
-        amountUSD
-      }
-    }`, {user: address.toLowerCase()}) as unknown as {
-        swaps: {
-            amountUSD: string
-        }[]
+    let skip = 0;
+    let result = 0;
+    for (let i = 0; i < 100; i++) {
+        skip = i * 1000;
+        const res = await queryClient.request(`
+        query transactions($user: Bytes!) {
+          swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user},first: ${skip}) {
+            amountUSD
+          }
+        }`, {user: address.toLowerCase()}) as unknown as {
+            swaps: {
+                amountUSD: string
+            }[]
+        }
+        result = result + res.swaps.reduce((prev,curr) => prev + Number(curr.amountUSD), 0)
+        if(res.swaps.length === 0 || res.swaps.length !== 1000) {
+            break;
+        }
     }
-    return res.swaps.reduce((prev,curr) => prev + Number(curr.amountUSD), 0)
+    return result;
 }
