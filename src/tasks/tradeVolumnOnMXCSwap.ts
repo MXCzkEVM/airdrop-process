@@ -30,7 +30,7 @@ export default async function (address: string) {
         skip = i * 1000;
         const res = await queryClient.request(`
         query transactions($user: Bytes!) {
-          swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user},first: ${skip}) {
+          swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user}, skip: ${skip}, first: 1000) {
             amountUSD
           }
         }`, {user: address.toLowerCase()}) as unknown as {

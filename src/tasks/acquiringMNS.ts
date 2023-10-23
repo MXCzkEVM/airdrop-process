@@ -10,7 +10,7 @@ export async function getMNSAddresses(client: GraphQLClient) {
     for (let i = 0; i < 100; i++) {
         skip = i * 1000;
         const res = await client.request(`query getNames {
-            wrappedDomains(first: ${skip}) {
+            wrappedDomains(skip: ${skip},first: 1000) {
                 owner {
                   id
                 }
