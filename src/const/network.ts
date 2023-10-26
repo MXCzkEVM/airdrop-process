@@ -5,9 +5,9 @@ const MXC_L2_RPC_URL = "http://localhost:8545"
 
 const MXC_Wannsee_RPC_URL = "http://localhost:28545"
 
-const Ethereum_RPC_URL = "https://bitter-twilight-tent.quiknode.pro/e7a33a4a4448ff31ddc9af8d4f4778a2c2301bf0/"
+const Ethereum_RPC_URL = "https://hardworking-blissful-violet.quiknode.pro/eee8dde277c23181e923a905e062f5dae1706624/"
 
-const Sepolia_RPC_URL = "https://morning-weathered-sanctuary.ethereum-sepolia.quiknode.pro/334a3422b75e4aae9c984eedbfa2a5e0f062b6c7/"
+const Sepolia_RPC_URL = "https://ultra-dark-telescope.ethereum-sepolia.quiknode.pro/8cea725dfaadfee9e8a3bc0e02af3732a04e3795/"
 export const ETHProvider = new ethers.providers.StaticJsonRpcProvider(Ethereum_RPC_URL);
 
 export const SepoliaProvider = new ethers.providers.StaticJsonRpcProvider(Sepolia_RPC_URL);
