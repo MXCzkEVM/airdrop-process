@@ -364,101 +364,74 @@ class Tasks {
 
     //Acquiring NEO m2pro  51-60
     static processTask51 = async () => {
-        try {
-            await generateTaskTable()
+            await generateTask51Table()
+            const mep1004Map = await acquiringNeoM2pro()
 
-            for(const address of addresses.keys()) {
-                await setWalletTask(address)
-            }
+            for(const address of mep1004Map.keys()) {
+                let neoNum = 0
+                let m2xNum = 0
 
-            async function generateTaskTable () {
-                await MXCTasksModel.findOrCreate({ where: { id: 51, task_name: 'Own 1 NEO registered on AXS', zks: 10000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 52, task_name: 'Own 2 NEOs registered on AXS', zks: 20000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 53, task_name: 'Own more than 3 NEOs registered on AXS', zks: 50000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 54, task_name: 'Own 5 NEOs registered on AXS', zks: 100000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 55, task_name: 'Own more than 5 NEOs registered on AXS', zks: 300000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 56, task_name: 'Own 1 M2 Pro registered on AXS', zks: 50000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 57, task_name: 'Own more than 2 M2 Pros registered on AXS', zks: 100000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 58, task_name: 'Own more than 3 M2 Pros registered on AXS', zks: 170000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 59, task_name: 'Own 5 M2 Pros registered on AXS', zks: 350000 } })
-                await MXCTasksModel.findOrCreate({ where: { id: 60, task_name: 'Own more than 5 M2 Pros registered on AXS', zks: 500000 } })
-            }
-
-            async function setWalletTask (walletAddr: string) {
-                try {
-                    const walletOrders = await acquiringNeoM2pro(walletAddr)
-        
-                    let neoNum = 0
-                    let m2xNum = 0
-        
-                    for (let item of walletOrders) {
-                        if (item.sncode.startsWith('NEO')) neoNum++
-                        if (item.sncode.startsWith('M2X')) m2xNum++
-                    }
-
-                    let task51 = false // Own 1 NEO registered on AXS                   10000
-                    let task52 = false // Own 2 NEOs registered on AXS                  20000
-                    let task53 = false // Own more than 3 NEOs registered on AXS        50000
-                    let task54 = false // Own 5 NEOs registered on AXS                  100000
-                    let task55 = false // Own more than 5 NEOs registered on AXS        300000
-                    let task56 = false // Own 1 M2 Pro registered on AXS                50000
-                    let task57 = false // Own more than 2 M2 Pros registered on AXS     100000
-                    let task58 = false // Own more than 3 M2 Pros registered on AXS     170000
-                    let task59 = false // Own 5 M2 Pros registered on AXS               350000
-                    let task60 = false // Own more than 5 M2 Pros registered on AXS     500000
-        
-                    if (neoNum === 1) {
-                        task51 = true
-                    } else if (neoNum === 2) {
-                        task52 = true
-                    } else if (neoNum >=3 && neoNum < 5) {
-                        task53 = true
-                    } else if (neoNum === 5) {
-                        task54 = true
-                    } else if (neoNum > 5) {
-                        task55 = true
-                    }
-        
-                    if (m2xNum === 1) {
-                        task56 = true
-                    } else if (m2xNum >= 2 && m2xNum < 3) {
-                        task57 = true
-                    } else if (m2xNum >= 3 && m2xNum < 5) {
-                        task58 = true
-                    } else if (m2xNum === 5) {
-                        task59 = true
-                    } else if (m2xNum > 5) {
-                        task60 = true
-                    }
-
-                    if(task51) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 51 } })
-
-                    if(task52) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 52 } })
-
-                    if(task53) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 53 } })
-
-                    if(task54) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 54 } })
-
-                    if(task55) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 55 } })
-
-                    if(task56) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 56 } })
-
-                    if(task57) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 57 } })
-
-                    if(task58) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 58 } })
-
-                    if(task59) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 59 } })
-
-                    if(task60) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(walletAddr), task_id: 60 } })
-                    
-                } catch (error) {
-                    console.log('error-----', error)
+                for (let item of mep1004Map.get(address)) {
+                    if (item.sncode.startsWith('NEO')) neoNum++
+                    if (item.sncode.startsWith('M2X')) m2xNum++
                 }
+
+                let task51 = false // Own 1 NEO registered on AXS                   10000
+                let task52 = false // Own 2 NEOs registered on AXS                  20000
+                let task53 = false // Own more than 3 NEOs registered on AXS        50000
+                let task54 = false // Own 5 NEOs registered on AXS                  100000
+                let task55 = false // Own more than 5 NEOs registered on AXS        300000
+                let task56 = false // Own 1 M2 Pro registered on AXS                50000
+                let task57 = false // Own more than 2 M2 Pros registered on AXS     100000
+                let task58 = false // Own more than 3 M2 Pros registered on AXS     170000
+                let task59 = false // Own 5 M2 Pros registered on AXS               350000
+                let task60 = false // Own more than 5 M2 Pros registered on AXS     500000
+
+                if (neoNum === 1) {
+                    task51 = true
+                } else if (neoNum === 2) {
+                    task52 = true
+                } else if (neoNum >=3 && neoNum < 5) {
+                    task53 = true
+                } else if (neoNum === 5) {
+                    task54 = true
+                } else if (neoNum > 5) {
+                    task55 = true
+                }
+
+                if (m2xNum === 1) {
+                    task56 = true
+                } else if (m2xNum >= 2 && m2xNum < 3) {
+                    task57 = true
+                } else if (m2xNum >= 3 && m2xNum < 5) {
+                    task58 = true
+                } else if (m2xNum === 5) {
+                    task59 = true
+                } else if (m2xNum > 5) {
+                    task60 = true
+                }
+
+                if(task51) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 51 } })
+
+                if(task52) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 52 } })
+
+                if(task53) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 53 } })
+
+                if(task54) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 54 } })
+
+                if(task55) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 55 } })
+
+                if(task56) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 56 } })
+
+                if(task57) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 57 } })
+
+                if(task58) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 58 } })
+
+                if(task59) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 59 } })
+
+                if(task60) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 60 } })
             }
-            
-        } catch (error) {
-            console.log('error-----', error)
-        }
+
     }
 }
 
@@ -678,5 +651,19 @@ export const generateSnapshots = async() => {
 
     }
     Logx.success("Generate snapshot finished")
+}
+
+
+async function generateTask51Table () {
+    await MXCTasksModel.findOrCreate({ where: { id: 51, task_name: 'Own 1 NEO registered on AXS', zks: 10000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 52, task_name: 'Own 2 NEOs registered on AXS', zks: 20000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 53, task_name: 'Own more than 3 NEOs registered on AXS', zks: 50000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 54, task_name: 'Own 5 NEOs registered on AXS', zks: 100000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 55, task_name: 'Own more than 5 NEOs registered on AXS', zks: 300000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 56, task_name: 'Own 1 M2 Pro registered on AXS', zks: 50000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 57, task_name: 'Own more than 2 M2 Pros registered on AXS', zks: 100000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 58, task_name: 'Own more than 3 M2 Pros registered on AXS', zks: 170000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 59, task_name: 'Own 5 M2 Pros registered on AXS', zks: 350000 } })
+    await MXCTasksModel.findOrCreate({ where: { id: 60, task_name: 'Own more than 5 M2 Pros registered on AXS', zks: 500000 } })
 }
 
