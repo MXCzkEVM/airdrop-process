@@ -11,7 +11,7 @@ export default async function () {
   for (let i = 0; i < 100; i++) {
     skip = i * 1000
 
-    const res = await neoM2proWannseeGraphClient.request(`query {
+    const res = await neoM2proWannseeGraphClient.request(`
     query mep1004tokeninfos {
       mep1004TokenInfos(first: 1000,skip: ${skip}) {
         id
