@@ -387,27 +387,35 @@ class Tasks {
                 let task59 = false // Own 5 M2 Pros registered on AXS               350000
                 let task60 = false // Own more than 5 M2 Pros registered on AXS     500000
 
-                if (neoNum === 1) {
+                if (neoNum >= 1) {
                     task51 = true
-                } else if (neoNum === 2) {
+                }
+                if (neoNum >= 2) {
                     task52 = true
-                } else if (neoNum >=3 && neoNum < 5) {
+                }
+                if (neoNum >=3) {
                     task53 = true
-                } else if (neoNum === 5) {
+                }
+                if (neoNum >= 5) {
                     task54 = true
-                } else if (neoNum > 5) {
+                }
+                if (neoNum > 5) {
                     task55 = true
                 }
 
-                if (m2xNum === 1) {
+                if (m2xNum >= 1) {
                     task56 = true
-                } else if (m2xNum >= 2 && m2xNum < 3) {
+                }
+                if (m2xNum >= 2) {
                     task57 = true
-                } else if (m2xNum >= 3 && m2xNum < 5) {
+                }
+                if (m2xNum >= 3) {
                     task58 = true
-                } else if (m2xNum === 5) {
+                }
+                if (m2xNum >= 5) {
                     task59 = true
-                } else if (m2xNum > 5) {
+                }
+                if  (m2xNum > 5) {
                     task60 = true
                 }
 
