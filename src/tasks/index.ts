@@ -604,6 +604,7 @@ export const syncMXCL2Addresses = async() => {
 
 export const processAll = async() => {
     await init();
+    await syncMXCL2Addresses();
     await MXCAddressTaskModel.truncate();
     await MXCSnapShotsModel.truncate();
     await Tasks.processTask1();
