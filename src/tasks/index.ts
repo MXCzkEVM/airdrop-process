@@ -331,7 +331,7 @@ class Tasks {
     // wannsee dapp 47-48
     static processTask47 = async() => {
         for(const address of addresses.keys()) {
-            const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions
+            const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || [];
             if(dapp_interactions.length >= 1) {
                 await MXCAddressTaskModel.findOrCreate({
                     where: {address: address, task_id: 47},
