@@ -606,7 +606,6 @@ export const processAll = async() => {
     await init();
     await syncMXCL2Addresses();
     await MXCAddressTaskModel.truncate();
-    await MXCSnapShotsModel.truncate();
     await Tasks.processTask1();
     await Tasks.processTask2();
     await Tasks.processTask5();
@@ -620,10 +619,10 @@ export const processAll = async() => {
     await Tasks.processTask38();
     await Tasks.processTask41();
     await Tasks.processTask42();
-    await Tasks.processTask43();
-    await Tasks.processTask44();
-    await Tasks.processTask47();
-    await Tasks.processTask49();
+    // await Tasks.processTask43();
+    // await Tasks.processTask44();
+    // await Tasks.processTask47();
+    // await Tasks.processTask49();
     await Tasks.processTask51();
     await generateSnapshots();
 }
