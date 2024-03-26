@@ -547,57 +547,58 @@ export const syncMXCL2Addresses = async() => {
         }
     }
 
-    const wannseeAddresses = Object.keys(wannseeDAPPContracts).map(item => item.toLowerCase())
+    // wannsee deprecated
+    // const wannseeAddresses = Object.keys(wannseeDAPPContracts).map(item => item.toLowerCase())
 
-    const wannseelastOne = await MXCAddressesModel.findOne({
-        order: Sequelize.literal('testnet_block_number DESC'),
-        limit: 1
-    })
-    startBlockNumber = 1;
-    if(wannseelastOne !== null) {
-        startBlockNumber = wannseelastOne.get().testnet_block_number;
-    }
-    latestBlockNumber = await WannseeProvider.getBlockNumber();
-    for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
-        Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`);
-
-        const block = await WannseeProvider.getBlockWithTransactions(i);
-
-        if(!block || !block.transactions) continue;
-        for (const transaction of block.transactions) {
-            const fromAddress = transaction.from;
-            const toAddress = transaction.to;
-            if(["0x0000777735367b36bC9B61C50022d9D0700dB4Ec","0x064ccaeA28cc971eAa427fAb4BDd02a77638dD82"].
-            map(item => item.toLowerCase()).includes(fromAddress.toLowerCase()) && (latestBlockNumber - startBlockNumber) > 10000) {
-                continue;
-            }
-            const [addr,created] = await MXCAddressesModel.findOrCreate({
-                where: {address: fromAddress},
-                defaults: {
-                    first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
-                    testnet_block_number: i,
-                }
-            })
-            const testnet_dapp_interactions = JSON.parse(addr.get().testnet_dapp_interactions || '[]')
-            if(toAddress) {
-                if(wannseeAddresses.includes(toAddress.toLowerCase())) {
-                    for (let i = 0; i < wannseeAddresses.length; i++) {
-                        if (wannseeAddresses[i] === toAddress.toLowerCase()) {
-                            if(!testnet_dapp_interactions.includes(Object.values(wannseeDAPPContracts)[i])) {
-                                testnet_dapp_interactions.push(Object.values(wannseeDAPPContracts)[i])
-                            }
-                        }
-                    }
-                }
-            }
-
-            addr.set('testnet_block_number', i)
-            addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
-            addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'));
-            await addr.save();
-            addresses.set(addr.get().address, addr)
-        }
-    }
+    // const wannseelastOne = await MXCAddressesModel.findOne({
+    //     order: Sequelize.literal('testnet_block_number DESC'),
+    //     limit: 1
+    // })
+    // startBlockNumber = 1;
+    // if(wannseelastOne !== null) {
+    //     startBlockNumber = wannseelastOne.get().testnet_block_number;
+    // }
+    // latestBlockNumber = await WannseeProvider.getBlockNumber();
+    // for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
+    //     Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`);
+    //
+    //     const block = await WannseeProvider.getBlockWithTransactions(i);
+    //
+    //     if(!block || !block.transactions) continue;
+    //     for (const transaction of block.transactions) {
+    //         const fromAddress = transaction.from;
+    //         const toAddress = transaction.to;
+    //         if(["0x0000777735367b36bC9B61C50022d9D0700dB4Ec","0x064ccaeA28cc971eAa427fAb4BDd02a77638dD82"].
+    //         map(item => item.toLowerCase()).includes(fromAddress.toLowerCase()) && (latestBlockNumber - startBlockNumber) > 10000) {
+    //             continue;
+    //         }
+    //         const [addr,created] = await MXCAddressesModel.findOrCreate({
+    //             where: {address: fromAddress},
+    //             defaults: {
+    //                 first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
+    //                 testnet_block_number: i,
+    //             }
+    //         })
+    //         const testnet_dapp_interactions = JSON.parse(addr.get().testnet_dapp_interactions || '[]')
+    //         if(toAddress) {
+    //             if(wannseeAddresses.includes(toAddress.toLowerCase())) {
+    //                 for (let i = 0; i < wannseeAddresses.length; i++) {
+    //                     if (wannseeAddresses[i] === toAddress.toLowerCase()) {
+    //                         if(!testnet_dapp_interactions.includes(Object.values(wannseeDAPPContracts)[i])) {
+    //                             testnet_dapp_interactions.push(Object.values(wannseeDAPPContracts)[i])
+    //                         }
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //
+    //         addr.set('testnet_block_number', i)
+    //         addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
+    //         addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'));
+    //         await addr.save();
+    //         addresses.set(addr.get().address, addr)
+    //     }
+    // }
 
 }
 
