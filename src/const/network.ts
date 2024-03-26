@@ -1,7 +1,7 @@
 import {ethers} from "ethers";
 import {MXCMarketplace} from "../../typechain-types/contracts/MXCMarketPlace.sol";
 
-const MXC_L2_RPC_URL = "http://localhost:8545"
+const MXC_L2_RPC_URL = "http://149.28.212.112:8545"
 
 const MXC_Wannsee_RPC_URL = "http://localhost:28545"
 
