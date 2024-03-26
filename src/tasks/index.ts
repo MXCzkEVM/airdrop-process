@@ -6,7 +6,6 @@ import {
     ETHProvider,
     MXCL2Provider,
     SepoliaProvider,
-    WannseeProvider
 } from "../const/network";
 import processERC20Transfer from "./erc20transfer";
 import {TransferEvent} from "../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20";
@@ -278,89 +277,89 @@ class Tasks {
     }
 
     // moon token
-    static processTask42 = async() => {
-        for(const address of addresses.keys()) {
-            const balance = await processERC20Balance(ContractAddr.MXCWannsee[ContractType.MOONToken], WannseeProvider, address);
+    // static processTask42 = async() => {
+    //     for(const address of addresses.keys()) {
+    //         const balance = await processERC20Balance(ContractAddr.MXCWannsee[ContractType.MOONToken], WannseeProvider, address);
+    //
+    //         if(balance.gte(BigNumber.from(10).pow(18))) {
+    //             await MXCAddressTaskModel.findOrCreate({
+    //                 where: {address: address, task_id: 42},
+    //                 defaults: {
+    //                     times: balance.div(BigNumber.from(10).pow(18)).toNumber()
+    //                 }
+    //             })
+    //         }
+    //     }
+    // }
 
-            if(balance.gte(BigNumber.from(10).pow(18))) {
-                await MXCAddressTaskModel.findOrCreate({
-                    where: {address: address, task_id: 42},
-                    defaults: {
-                        times: balance.div(BigNumber.from(10).pow(18)).toNumber()
-                    }
-                })
-            }
-        }
-    }
-
-    // Bridging funds into Wannsee Testnet
-    static processTask43 = async () => {
-        // L1 -> L2
-        await processERC20Transfer(ContractAddr.Sepolia[ContractType.MXCTOKEN],
-            SepoliaProvider,
-            3854984,
-            async (events: TransferEvent[]) => {
-                for(let i = 0 ; i < events.length; i++) {
-                    await MXCAddressTaskModel.findOrCreate({
-                        where: {address: events[i].args.from, task_id: 43},
-                    })
-                }
-            }, null, ContractAddr.Sepolia[ContractType.MXCERC20L1Bridge])
-    }
-
-    // wannsee transaction count 44-46
-    static processTask44 = async () => {
-        let taskIds = {
-            3: 44,
-            5: 45,
-            10: 46,
-        }
-        for(const address of addresses.keys()) {
-            const count = await WannseeProvider.getTransactionCount(address)
-            for(const amount of Object.keys(taskIds)) {
-                if(count >= Number(amount)) {
-                    const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
-                    await MXCAddressTaskModel.findOrCreate({
-                        where: {address: address, task_id: taskId},
-                    })
-                }
-            }
-        }
-    }
-
-    // wannsee dapp 47-48
-    static processTask47 = async() => {
-        for(const address of addresses.keys()) {
-            const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || [];
-            if(dapp_interactions.length >= 1) {
-                await MXCAddressTaskModel.findOrCreate({
-                    where: {address: address, task_id: 47},
-                })
-            }
-            if(dapp_interactions.length >= 2) {
-                await MXCAddressTaskModel.findOrCreate({
-                    where: {address: address, task_id: 48},
-                })
-            }
-        }
-    }
-
-    //Acquiring MNS  49-50
-    static processTask49 = async () => {
-        const addresses = await getMNSAddresses(mnsWannseeGraphClient);
-
-        for(let i = 0; i < addresses.length; i++) {
-            const mns = await acquiringMNS(mnsWannseeGraphClient,addresses[i])
-            await MXCAddressTaskModel.findOrCreate({
-                where: {address: ethers.utils.getAddress(addresses[i]), task_id: 49},
-            })
-            if(mns.length >= 3) {
-                await MXCAddressTaskModel.findOrCreate({
-                    where: {address: ethers.utils.getAddress(addresses[i]), task_id: 50},
-                })
-            }
-        }
-    }
+    // // Bridging funds into Wannsee Testnet
+    // static processTask43 = async () => {
+    //     // L1 -> L2
+    //     await processERC20Transfer(ContractAddr.Sepolia[ContractType.MXCTOKEN],
+    //         SepoliaProvider,
+    //         3854984,
+    //         async (events: TransferEvent[]) => {
+    //             for(let i = 0 ; i < events.length; i++) {
+    //                 await MXCAddressTaskModel.findOrCreate({
+    //                     where: {address: events[i].args.from, task_id: 43},
+    //                 })
+    //             }
+    //         }, null, ContractAddr.Sepolia[ContractType.MXCERC20L1Bridge])
+    // }
+    //
+    // // wannsee transaction count 44-46
+    // static processTask44 = async () => {
+    //     let taskIds = {
+    //         3: 44,
+    //         5: 45,
+    //         10: 46,
+    //     }
+    //     for(const address of addresses.keys()) {
+    //         const count = await WannseeProvider.getTransactionCount(address)
+    //         for(const amount of Object.keys(taskIds)) {
+    //             if(count >= Number(amount)) {
+    //                 const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
+    //                 await MXCAddressTaskModel.findOrCreate({
+    //                     where: {address: address, task_id: taskId},
+    //                 })
+    //             }
+    //         }
+    //     }
+    // }
+    //
+    // // wannsee dapp 47-48
+    // static processTask47 = async() => {
+    //     for(const address of addresses.keys()) {
+    //         const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || [];
+    //         if(dapp_interactions.length >= 1) {
+    //             await MXCAddressTaskModel.findOrCreate({
+    //                 where: {address: address, task_id: 47},
+    //             })
+    //         }
+    //         if(dapp_interactions.length >= 2) {
+    //             await MXCAddressTaskModel.findOrCreate({
+    //                 where: {address: address, task_id: 48},
+    //             })
+    //         }
+    //     }
+    // }
+    //
+    // //Acquiring MNS  49-50
+    // static processTask49 = async () => {
+    //     const addresses = await getMNSAddresses(mnsWannseeGraphClient);
+    //
+    //     for(let i = 0; i < addresses.length; i++) {
+    //         const mns = await acquiringMNS(mnsWannseeGraphClient,addresses[i])
+    //         await MXCAddressTaskModel.findOrCreate({
+    //             where: {address: ethers.utils.getAddress(addresses[i]), task_id: 49},
+    //         })
+    //         if(mns.length >= 3) {
+    //             await MXCAddressTaskModel.findOrCreate({
+    //                 where: {address: ethers.utils.getAddress(addresses[i]), task_id: 50},
+    //             })
+    //         }
+    //     }
+    // }
 
     //Acquiring NEO m2pro  51-60
     static processTask51 = async () => {
@@ -484,6 +483,11 @@ const wannseeDAPPContracts = {
 }
 
 const init = async() => {
+    const task42 = await MXCTasksModel.findOne({where: {
+            id: 42
+        }})
+    task42.get().testnet = 1;
+    await task42.save();
     if(addresses.size === 0) {
         const all = await MXCAddressesModel.findAll()
         for(let i = 0; i < all.length; i++) {
@@ -606,7 +610,7 @@ export const syncMXCL2Addresses = async() => {
 export const processAll = async() => {
     await init();
     await syncMXCL2Addresses();
-    await MXCAddressTaskModel.truncate();
+    await MXCSnapShotsModel.truncate();
     await Tasks.processTask1();
     await Tasks.processTask2();
     await Tasks.processTask5();
@@ -619,7 +623,7 @@ export const processAll = async() => {
     await Tasks.processTask33();
     await Tasks.processTask38();
     await Tasks.processTask41();
-    await Tasks.processTask42();
+    // await Tasks.processTask42();
     // await Tasks.processTask43();
     // await Tasks.processTask44();
     // await Tasks.processTask47();

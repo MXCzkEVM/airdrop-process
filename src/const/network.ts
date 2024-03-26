@@ -1,7 +1,7 @@
 import {ethers} from "ethers";
 import {MXCMarketplace} from "../../typechain-types/contracts/MXCMarketPlace.sol";
 
-const MXC_L2_RPC_URL = "http://localhost:8545"
+const MXC_L2_RPC_URL = "http://149.28.212.112:8545"
 
 const MXC_Wannsee_RPC_URL = "http://localhost:28545"
 
@@ -13,7 +13,7 @@ export const ETHProvider = new ethers.providers.StaticJsonRpcProvider(Ethereum_R
 export const SepoliaProvider = new ethers.providers.StaticJsonRpcProvider(Sepolia_RPC_URL);
 export const MXCL2Provider = new ethers.providers.StaticJsonRpcProvider(MXC_L2_RPC_URL);
 
-export const WannseeProvider = new ethers.providers.StaticJsonRpcProvider(MXC_Wannsee_RPC_URL)
+// export const WannseeProvider = new ethers.providers.StaticJsonRpcProvider(MXC_Wannsee_RPC_URL)
 export enum ContractType {
     MEP2542 = "MEP2542",
     MEP1002Token = "MEP1002Token",
