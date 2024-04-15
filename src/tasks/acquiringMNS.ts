@@ -2,7 +2,7 @@ import {GraphQLClient} from "graphql-request";
 
 export const mnsMainnetGraphClient = new GraphQLClient("https://mxc-graph.mxc.com/subgraphs/name/mnsdomains/mns");
 
-export const mnsWannseeGraphClient = new GraphQLClient("https://mxc-graph-node.mxc.com/subgraphs/name/mnsdomains/mns");
+export const mnsWannseeGraphClient = new GraphQLClient("https://geneva-graph-node.moonchain.com/subgraphs/name/mnsdomains/mns");
 
 export async function getMNSAddresses(client: GraphQLClient) {
     let skip = 0;
