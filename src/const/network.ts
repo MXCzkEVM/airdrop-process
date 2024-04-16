@@ -3,7 +3,7 @@ import {MXCMarketplace} from "../../typechain-types/contracts/MXCMarketPlace.sol
 
 const MXC_L2_RPC_URL = "http://149.28.212.112:8545"
 
-const MXC_Wannsee_RPC_URL = "http://localhost:28545"
+const MXC_Geneva_RPC_URL = "http://localhost:28545"
 
 const Ethereum_RPC_URL = "https://hardworking-blissful-violet.quiknode.pro/eee8dde277c23181e923a905e062f5dae1706624/"
 
@@ -13,7 +13,7 @@ export const ETHProvider = new ethers.providers.StaticJsonRpcProvider(Ethereum_R
 export const SepoliaProvider = new ethers.providers.StaticJsonRpcProvider(Sepolia_RPC_URL);
 export const MXCL2Provider = new ethers.providers.StaticJsonRpcProvider(MXC_L2_RPC_URL);
 
-// export const WannseeProvider = new ethers.providers.StaticJsonRpcProvider(MXC_Wannsee_RPC_URL)
+export const GenevaProvider = new ethers.providers.StaticJsonRpcProvider(MXC_Geneva_RPC_URL)
 export enum ContractType {
     MEP2542 = "MEP2542",
     MEP1002Token = "MEP1002Token",
@@ -37,16 +37,16 @@ export enum ContractType {
 }
 
 export const ContractAddr = {
-    MXCWannsee: {
-      [ContractType.MXCMarketPlace]: "0x91fd2e13379dF87f752c82E8C16a1aE72601a9B2",
-      [ContractType.MNS]: "0x2246EdAd0bc9212Bae82D43974619480A9D1f387",
-      [ContractType.MEP1002NamingToken]: "0xad5a1855A383732f311241c1A4F9510da0Ad0743",
-      [ContractType.MXCSwapRouter]: "0xCaf6FE52B3b2948EFe7EA72C1ffd0B49C5FB030E",
-      [ContractType.MEP1004Token]: "0x5CE293229a794AF03Ec3c95Cfba6b1058D558026",
+    MXCGeneva: {
+      [ContractType.MXCMarketPlace]: "0xe596cc861d0406ce9a9bd4bd9c4367469019d790",
+      [ContractType.MNS]: "0xCE5e3c318BFC7c2dee486cF7c62Ba95feFd6d2bD",
+      [ContractType.MEP1002NamingToken]: "0xe5f46E29D91BeBa5C58a83f8558d912820FaC267",
+      [ContractType.MXCSwapRouter]: "0x96adb4c80F6c934a20303d4b88f935F967299d5e",
+      [ContractType.MEP1004Token]: "0x0D589F5EeDF70e17F053CBb93760Db7E418603F6",
       [ContractType.MXCAAVEPool]: "0x5985a5028596B0345451D2680b75672248c0fe08",
-      [ContractType.MOONToken]: "0x13d65548C25A7448fDBb95ae1CC48266DfE0fc51",
-      [ContractType.MEP2542]: "0xc23832093cEC4306108775468FCCbcA84E19eAEa",
-      [ContractType.MXCERC20L2Bridge]: "0x5F850D2E95076077B4677e6d8cB8a0BCFFB2D26a"
+      [ContractType.MOONToken]: "0x13d65548C25A7448fDBb95ae1CC48266DfE0fc51", // TODO
+      [ContractType.MEP2542]: "0xf01eceed6319423bCC953889CB8F35E7084df1dF",
+      [ContractType.MXCERC20L2Bridge]: "0x5F850D2E95076077B4677e6d8cB8a0BCFFB2D26a" // TODO
     },
     MXCL2Mainnet: {
         [ContractType.LPWAN]: "0x2000777700000000000000000000000000000001",

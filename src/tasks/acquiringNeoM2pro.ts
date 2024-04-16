@@ -1,6 +1,6 @@
 import {GraphQLClient} from "graphql-request";
 
-export const neoM2proWannseeGraphClient = new GraphQLClient("http://149.28.212.112:8000/subgraphs/name/mxczkevm/mep1004-graph");
+export const neoM2proMainnetGraphClient = new GraphQLClient("https://graph-node.moonchain.com/subgraphs/name/mxczkevm/mep1004-graph");
 
 export default async function () {
 
@@ -11,7 +11,7 @@ export default async function () {
   for (let i = 0; i < 100; i++) {
     skip = i * 1000
 
-    const res = await neoM2proWannseeGraphClient.request(`
+    const res = await neoM2proMainnetGraphClient.request(`
     query mep1004tokeninfos {
       mep1004TokenInfos(first: 1000,skip: ${skip}) {
         id

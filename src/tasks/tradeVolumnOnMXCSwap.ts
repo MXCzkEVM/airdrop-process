@@ -1,6 +1,6 @@
 import {GraphQLClient} from "graphql-request";
 
-const queryClient = new GraphQLClient("https://mxc-graph.mxc.com/subgraphs/name/ianlapham/uniswap-v2-dev");
+const queryClient = new GraphQLClient("https://graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev");
 
 export async function getMXCSwapAddresses() {
     let skip = 0;
