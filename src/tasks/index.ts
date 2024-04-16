@@ -6,13 +6,14 @@ import {
     ETHProvider,
     MXCL2Provider,
     SepoliaProvider,
+    GenevaProvider
 } from "../const/network";
 import processERC20Transfer from "./erc20transfer";
 import {TransferEvent} from "../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20";
 import {MXCAddressTaskModel} from '../models';
 import {MXCAddressesModel} from "../models/mxc_addresses";
 import {Sequelize} from "sequelize";
-import acquiringMNS, {getMNSAddresses, mnsMainnetGraphClient, mnsWannseeGraphClient} from "./acquiringMNS";
+import acquiringMNS, {getMNSAddresses, mnsMainnetGraphClient, mnsGenevaGraphClient} from "./acquiringMNS";
 import acquiringNeoM2pro from "./acquiringNeoM2pro";
 import bridgingMoreThanValueOfAssets from "./bridgingMoreThanValueOfAssets";
 import {parseEther} from "ethers/lib/utils";
@@ -24,6 +25,7 @@ import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
 import {MXCSnapShotsModel} from "../models/mxc_snapshots";
 import {MXCTasksModel} from "../models/mxc_tasks";
 import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
+import migrate from "../migrate";
 
 export let addresses:Map<string, MXCAddressesModel> = new Map();
 
@@ -277,93 +279,92 @@ class Tasks {
     }
 
     // moon token
-    // static processTask42 = async() => {
-    //     for(const address of addresses.keys()) {
-    //         const balance = await processERC20Balance(ContractAddr.MXCWannsee[ContractType.MOONToken], WannseeProvider, address);
-    //
-    //         if(balance.gte(BigNumber.from(10).pow(18))) {
-    //             await MXCAddressTaskModel.findOrCreate({
-    //                 where: {address: address, task_id: 42},
-    //                 defaults: {
-    //                     times: balance.div(BigNumber.from(10).pow(18)).toNumber()
-    //                 }
-    //             })
-    //         }
-    //     }
-    // }
+    static processTask61 = async() => {
+        for(const address of addresses.keys()) {
+            const balance = await processERC20Balance(ContractAddr.MXCGeneva[ContractType.MOONToken], GenevaProvider, address);
 
-    // // Bridging funds into Wannsee Testnet
-    // static processTask43 = async () => {
-    //     // L1 -> L2
-    //     await processERC20Transfer(ContractAddr.Sepolia[ContractType.MXCTOKEN],
-    //         SepoliaProvider,
-    //         3854984,
-    //         async (events: TransferEvent[]) => {
-    //             for(let i = 0 ; i < events.length; i++) {
-    //                 await MXCAddressTaskModel.findOrCreate({
-    //                     where: {address: events[i].args.from, task_id: 43},
-    //                 })
-    //             }
-    //         }, null, ContractAddr.Sepolia[ContractType.MXCERC20L1Bridge])
-    // }
-    //
-    // // wannsee transaction count 44-46
-    // static processTask44 = async () => {
-    //     let taskIds = {
-    //         3: 44,
-    //         5: 45,
-    //         10: 46,
-    //     }
-    //     for(const address of addresses.keys()) {
-    //         const count = await WannseeProvider.getTransactionCount(address)
-    //         for(const amount of Object.keys(taskIds)) {
-    //             if(count >= Number(amount)) {
-    //                 const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
-    //                 await MXCAddressTaskModel.findOrCreate({
-    //                     where: {address: address, task_id: taskId},
-    //                 })
-    //             }
-    //         }
-    //     }
-    // }
-    //
-    // // wannsee dapp 47-48
-    // static processTask47 = async() => {
-    //     for(const address of addresses.keys()) {
-    //         const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || [];
-    //         if(dapp_interactions.length >= 1) {
-    //             await MXCAddressTaskModel.findOrCreate({
-    //                 where: {address: address, task_id: 47},
-    //             })
-    //         }
-    //         if(dapp_interactions.length >= 2) {
-    //             await MXCAddressTaskModel.findOrCreate({
-    //                 where: {address: address, task_id: 48},
-    //             })
-    //         }
-    //     }
-    // }
-    //
-    // //Acquiring MNS  49-50
-    // static processTask49 = async () => {
-    //     const addresses = await getMNSAddresses(mnsWannseeGraphClient);
-    //
-    //     for(let i = 0; i < addresses.length; i++) {
-    //         const mns = await acquiringMNS(mnsWannseeGraphClient,addresses[i])
-    //         await MXCAddressTaskModel.findOrCreate({
-    //             where: {address: ethers.utils.getAddress(addresses[i]), task_id: 49},
-    //         })
-    //         if(mns.length >= 3) {
-    //             await MXCAddressTaskModel.findOrCreate({
-    //                 where: {address: ethers.utils.getAddress(addresses[i]), task_id: 50},
-    //             })
-    //         }
-    //     }
-    // }
+            if(balance.gte(BigNumber.from(10).pow(18))) {
+                await MXCAddressTaskModel.findOrCreate({
+                    where: {address: address, task_id: 61},
+                    defaults: {
+                        times: balance.div(BigNumber.from(10).pow(18)).toNumber()
+                    }
+                })
+            }
+        }
+    }
+
+    // Bridging funds into geneva Testnet
+    static processTask62 = async () => {
+        // L1 -> L2
+        await processERC20Transfer(ContractAddr.Sepolia[ContractType.MXCTOKEN],
+            SepoliaProvider,
+            3854984,
+            async (events: TransferEvent[]) => {
+                for(let i = 0 ; i < events.length; i++) {
+                    await MXCAddressTaskModel.findOrCreate({
+                        where: {address: events[i].args.from, task_id: 62},
+                    })
+                }
+            }, null, ContractAddr.Sepolia[ContractType.MXCERC20L1Bridge])
+    }
+
+    // geneva transaction count 63-65
+    static processTask63 = async () => {
+        let taskIds = {
+            3: 63,
+            5: 64,
+            10: 65,
+        }
+        for(const address of addresses.keys()) {
+            const count = await GenevaProvider.getTransactionCount(address)
+            for(const amount of Object.keys(taskIds)) {
+                if(count >= Number(amount)) {
+                    const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
+                    await MXCAddressTaskModel.findOrCreate({
+                        where: {address: address, task_id: taskId},
+                    })
+                }
+            }
+        }
+    }
+
+    // geneva dapp 66-67
+    static processTask66 = async() => {
+        for(const address of addresses.keys()) {
+            const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || [];
+            if(dapp_interactions.length >= 1) {
+                await MXCAddressTaskModel.findOrCreate({
+                    where: {address: address, task_id: 66},
+                })
+            }
+            if(dapp_interactions.length >= 2) {
+                await MXCAddressTaskModel.findOrCreate({
+                    where: {address: address, task_id: 67},
+                })
+            }
+        }
+    }
+
+    //Acquiring MNS  68-69
+    static processTask68 = async () => {
+        const addresses = await getMNSAddresses(mnsGenevaGraphClient);
+
+        for(let i = 0; i < addresses.length; i++) {
+            const mns = await acquiringMNS(mnsGenevaGraphClient,addresses[i])
+            await MXCAddressTaskModel.findOrCreate({
+                where: {address: ethers.utils.getAddress(addresses[i]), task_id: 68},
+            })
+            if(mns.length >= 3) {
+                await MXCAddressTaskModel.findOrCreate({
+                    where: {address: ethers.utils.getAddress(addresses[i]), task_id: 69},
+                })
+            }
+        }
+    }
 
     //Acquiring NEO m2pro  51-60
     static processTask51 = async () => {
-            await generateTask51Table()
             const mep1004Map = await acquiringNeoM2pro()
 
             for(const address of mep1004Map.keys()) {
@@ -472,22 +473,18 @@ const mainnetDAPPContracts = {
     [ContractAddr.MXCL2Mainnet[ContractType.MXCERC20L2Bridge]]: "BridgeL2_L1"
 };
 
-const wannseeDAPPContracts = {
-    [ContractAddr.MXCWannsee[ContractType.MNS]]: "MNS",
-    [ContractAddr.MXCWannsee[ContractType.MXCAAVEPool]]: "AAVE",
-    [ContractAddr.MXCWannsee[ContractType.MEP1002NamingToken]]: "Hexagon",
-    [ContractAddr.MXCWannsee[ContractType.MXCMarketPlace]]: "NFT",
-    [ContractAddr.MXCWannsee[ContractType.MEP2542]]: "MEP2542Mining",
-    [ContractAddr.MXCWannsee[ContractType.MXCSwapRouter]]: "SWAP",
-    [ContractAddr.MXCWannsee[ContractType.MXCERC20L2Bridge]]: "BridgeL2_L1"
+const genevaDAPPContracts = {
+    [ContractAddr.MXCGeneva[ContractType.MNS]]: "MNS",
+    [ContractAddr.MXCGeneva[ContractType.MXCAAVEPool]]: "AAVE",
+    [ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]]: "Hexagon",
+    [ContractAddr.MXCGeneva[ContractType.MXCMarketPlace]]: "NFT",
+    [ContractAddr.MXCGeneva[ContractType.MEP2542]]: "MEP2542Mining",
+    [ContractAddr.MXCGeneva[ContractType.MXCSwapRouter]]: "SWAP",
+    [ContractAddr.MXCGeneva[ContractType.MXCERC20L2Bridge]]: "BridgeL2_L1"
 }
 
 const init = async() => {
-    const task42 = await MXCTasksModel.findOne({where: {
-            id: 42
-        }})
-    task42.get().testnet = 1;
-    await task42.save();
+    await migrate()
     if(addresses.size === 0) {
         const all = await MXCAddressesModel.findAll()
         for(let i = 0; i < all.length; i++) {
@@ -551,58 +548,58 @@ export const syncMXCL2Addresses = async() => {
         }
     }
 
-    // wannsee deprecated
-    // const wannseeAddresses = Object.keys(wannseeDAPPContracts).map(item => item.toLowerCase())
+    // geneva
+    const genevaAddresses = Object.keys(genevaDAPPContracts).map(item => item.toLowerCase())
 
-    // const wannseelastOne = await MXCAddressesModel.findOne({
-    //     order: Sequelize.literal('testnet_block_number DESC'),
-    //     limit: 1
-    // })
-    // startBlockNumber = 1;
-    // if(wannseelastOne !== null) {
-    //     startBlockNumber = wannseelastOne.get().testnet_block_number;
-    // }
-    // latestBlockNumber = await WannseeProvider.getBlockNumber();
-    // for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
-    //     Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`);
-    //
-    //     const block = await WannseeProvider.getBlockWithTransactions(i);
-    //
-    //     if(!block || !block.transactions) continue;
-    //     for (const transaction of block.transactions) {
-    //         const fromAddress = transaction.from;
-    //         const toAddress = transaction.to;
-    //         if(["0x0000777735367b36bC9B61C50022d9D0700dB4Ec","0x064ccaeA28cc971eAa427fAb4BDd02a77638dD82"].
-    //         map(item => item.toLowerCase()).includes(fromAddress.toLowerCase()) && (latestBlockNumber - startBlockNumber) > 10000) {
-    //             continue;
-    //         }
-    //         const [addr,created] = await MXCAddressesModel.findOrCreate({
-    //             where: {address: fromAddress},
-    //             defaults: {
-    //                 first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
-    //                 testnet_block_number: i,
-    //             }
-    //         })
-    //         const testnet_dapp_interactions = JSON.parse(addr.get().testnet_dapp_interactions || '[]')
-    //         if(toAddress) {
-    //             if(wannseeAddresses.includes(toAddress.toLowerCase())) {
-    //                 for (let i = 0; i < wannseeAddresses.length; i++) {
-    //                     if (wannseeAddresses[i] === toAddress.toLowerCase()) {
-    //                         if(!testnet_dapp_interactions.includes(Object.values(wannseeDAPPContracts)[i])) {
-    //                             testnet_dapp_interactions.push(Object.values(wannseeDAPPContracts)[i])
-    //                         }
-    //                     }
-    //                 }
-    //             }
-    //         }
-    //
-    //         addr.set('testnet_block_number', i)
-    //         addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
-    //         addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'));
-    //         await addr.save();
-    //         addresses.set(addr.get().address, addr)
-    //     }
-    // }
+    const genevaLastOne = await MXCAddressesModel.findOne({
+        order: Sequelize.literal('testnet_block_number DESC'),
+        limit: 1
+    })
+    startBlockNumber = 1;
+    if(genevaLastOne !== null) {
+        startBlockNumber = genevaLastOne.get().testnet_block_number;
+    }
+    latestBlockNumber = await GenevaProvider.getBlockNumber();
+    for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
+        Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`);
+
+        const block = await GenevaProvider.getBlockWithTransactions(i);
+
+        if(!block || !block.transactions) continue;
+        for (const transaction of block.transactions) {
+            const fromAddress = transaction.from;
+            const toAddress = transaction.to;
+            if(["0x0000777735367b36bC9B61C50022d9D0700dB4Ec","0x064ccaeA28cc971eAa427fAb4BDd02a77638dD82"].
+            map(item => item.toLowerCase()).includes(fromAddress.toLowerCase()) && (latestBlockNumber - startBlockNumber) > 10000) {
+                continue;
+            }
+            const [addr,created] = await MXCAddressesModel.findOrCreate({
+                where: {address: fromAddress},
+                defaults: {
+                    first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
+                    testnet_block_number: i,
+                }
+            })
+            const testnet_dapp_interactions = JSON.parse(addr.get().testnet_dapp_interactions || '[]')
+            if(toAddress) {
+                if(genevaAddresses.includes(toAddress.toLowerCase())) {
+                    for (let i = 0; i < genevaAddresses.length; i++) {
+                        if (genevaAddresses[i] === toAddress.toLowerCase()) {
+                            if(!testnet_dapp_interactions.includes(Object.values(genevaDAPPContracts)[i])) {
+                                testnet_dapp_interactions.push(Object.values(genevaDAPPContracts)[i])
+                            }
+                        }
+                    }
+                }
+            }
+
+            addr.set('testnet_block_number', i)
+            addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
+            addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'));
+            await addr.save();
+            addresses.set(addr.get().address, addr)
+        }
+    }
 
 }
 
@@ -623,12 +620,11 @@ export const processAll = async() => {
     await Tasks.processTask33();
     await Tasks.processTask38();
     await Tasks.processTask41();
-    // await Tasks.processTask42();
-    // await Tasks.processTask43();
-    // await Tasks.processTask44();
-    // await Tasks.processTask47();
-    // await Tasks.processTask49();
-    await Tasks.processTask51();
+    // await Tasks.processTask61();
+    // await Tasks.processTask62();
+    await Tasks.processTask63();
+    await Tasks.processTask66();
+    await Tasks.processTask68();
     await generateSnapshots();
 }
 
