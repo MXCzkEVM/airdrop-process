@@ -1,9 +1,11 @@
 import {MigrationsModel} from "../models";
 import {MXCTasksModel} from "../models";
 import {DB} from "../db"
+import {Op} from "sequelize";
 export default async function () {
     await DB.sync()
     await addGenevaTasks()
+    await genevaTaskTestnetIDTwo()
 }
 
 export async function addGenevaTasks() {
@@ -66,6 +68,21 @@ export async function addGenevaTasks() {
                 testnet: 1
             },
         ])
+    }
+}
+
+export async function genevaTaskTestnetIDTwo() {
+    const migrated = await migrate()
+    if(!migrated) {
+        await MXCTasksModel.update({
+            testnet: 2
+        },{
+            where: {
+                id: {
+                    [Op.between]: [61, 69]
+                }
+            }
+        })
     }
 }
 
