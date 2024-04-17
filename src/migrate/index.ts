@@ -1,4 +1,4 @@
-import {MigrationsModel} from "../models";
+import {MigrationsModel, MXCAddressesModel, MXCAddressTaskModel} from "../models";
 import {MXCTasksModel} from "../models";
 import {DB} from "../db"
 import {Op} from "sequelize";
@@ -6,6 +6,7 @@ export default async function () {
     await DB.sync()
     await addGenevaTasks()
     await genevaTaskTestnetIDTwo()
+    await resetTestnetBlockNumber()
 }
 
 export async function addGenevaTasks() {
@@ -80,6 +81,21 @@ export async function genevaTaskTestnetIDTwo() {
             where: {
                 id: {
                     [Op.between]: [61, 69]
+                }
+            }
+        })
+    }
+}
+
+export async function resetTestnetBlockNumber() {
+    const migrated = await migrate()
+    if(!migrated) {
+        await MXCAddressesModel.update({
+            testnet_block_number: 0
+        },{
+            where: {
+                testnet_block_number: {
+                    [Op.gt]: 0
                 }
             }
         })
