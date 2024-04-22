@@ -26,6 +26,7 @@ import {MXCSnapShotsModel} from "../models/mxc_snapshots";
 import {MXCTasksModel} from "../models/mxc_tasks";
 import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
+import dayjs from "dayjs";
 
 export let addresses:Map<string, MXCAddressesModel> = new Map();
 
@@ -440,6 +441,17 @@ class Tasks {
                 if(task60) await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 60 } })
             }
 
+    }
+
+    static processByWeeklyTasks = async () => {
+      const currentTime = dayjs().valueOf()
+      MXCTasksModel.findAll({
+        where: {
+          expiredAt: {
+            gte: currentTime
+          }
+        }
+      })
     }
 }
 

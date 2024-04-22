@@ -12,9 +12,10 @@ MXCTasksModel.init({
     task_name: DataTypes.TEXT,
     zks: DataTypes.INTEGER,
     testnet: DataTypes.INTEGER,
+    expiredAt: DataTypes.TIME
 },{
     sequelize: DB,
     modelName: 'mxc_tasks',
     createdAt: 'created_at',
-    updatedAt: 'updated_at'
+    updatedAt: 'updated_at',
 })
