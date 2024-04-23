@@ -10,6 +10,9 @@ export async function* generateBlockRanges(startBlock: number, endBlock: number,
 }
 
 export function scientificToDecimal(scientificNotation: number) {
+    if (typeof scientificNotation !== 'number' && typeof scientificNotation !== 'string') {
+        return '0';
+    }
     const parts = scientificNotation.toString().split('e+');
     const base = parts[0].replace('.', '');
     const power = parseInt(parts[1], 10);
