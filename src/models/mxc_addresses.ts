@@ -17,7 +17,7 @@ MXCAddressesModel.init({
     testnet_block_number: DataTypes.INTEGER,
     dapp_interactions: DataTypes.TEXT,
     testnet_dapp_interactions: DataTypes.TEXT,
-    transaction_aggregate_value_mxc: DataTypes.INTEGER,
+    transaction_aggregate_value_mxc: DataTypes.TEXT,
     first_transaction_time: DataTypes.DATE,
     last_transaction_time: DataTypes.DATE
 },{
