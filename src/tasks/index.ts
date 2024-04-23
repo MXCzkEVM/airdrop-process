@@ -144,7 +144,7 @@ class Tasks {
       1000000: 17,
     }
     for (const address of addresses.keys()) {
-      const value = addresses.get(address).get().transaction_aggregate_value_mxc
+      const value = scientificToDecimal(addresses.get(address).get().transaction_aggregate_value_mxc)
       for (const amount of Object.keys(taskIds)) {
         if (BigNumber.from(value || 0).gte(parseEther(amount))) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
@@ -590,7 +590,7 @@ export const syncMXCL2Addresses = async () => {
 
 
       const receipt = await MXCL2Provider.getTransactionReceipt(transaction.hash);
-      const transactionAggregateValueMXC = BigNumber.from(scientificToDecimal(addr.get().transaction_aggregate_value_mxc) || 0)
+      const transactionAggregateValueMXC = BigNumber.from(scientificToDecimal(addr.get().transaction_aggregate_value_mxc).toString() || 0)
       addr.set('transaction_aggregate_value_mxc', transactionAggregateValueMXC.add(receipt.gasUsed.mul(transaction.gasPrice)).toString())
       addr.set('block_number', i)
       addr.set('dapp_interactions', JSON.stringify(dapp_interactions))
