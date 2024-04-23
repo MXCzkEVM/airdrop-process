@@ -27,7 +27,7 @@ import { MXCTasksModel } from "../models/mxc_tasks";
 import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
-
+import fetch from "node-fetch";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {

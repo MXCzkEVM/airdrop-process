@@ -17,6 +17,7 @@
     "ethers": "^5.0.0",
     "graphql": "^16.8.1",
     "graphql-request": "^6.1.0",
+    "node-fetch": "^3.3.2",
     "sequelize": "^6.33.0",
     "sqlite3": "^5.1.6",
     "ts-node": "^10.9.1",
