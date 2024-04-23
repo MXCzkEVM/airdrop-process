@@ -12,7 +12,7 @@ import processERC20Transfer from "./erc20transfer";
 import { TransferEvent } from "../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20";
 import { MXCAddressTaskModel } from '../models';
 import { MXCAddressesModel } from "../models/mxc_addresses";
-import { Sequelize } from "sequelize";
+import { Op, Sequelize } from "sequelize";
 import acquiringMNS, { getMNSAddresses, mnsMainnetGraphClient, mnsGenevaGraphClient } from "./acquiringMNS";
 import acquiringNeoM2pro from "./acquiringNeoM2pro";
 import bridgingMoreThanValueOfAssets from "./bridgingMoreThanValueOfAssets";
@@ -655,26 +655,26 @@ export const syncMXCL2Addresses = async () => {
 
 
 export const processAll = async () => {
-  await init();
-  await syncMXCL2Addresses();
-  await MXCSnapShotsModel.truncate();
-  await Tasks.processTask1();
-  await Tasks.processTask2();
-  await Tasks.processTask5();
-  await Tasks.processTask9();
-  await Tasks.processTask11();
-  await Tasks.processTask14();
-  await Tasks.processTask18();
-  await Tasks.processTask23();
-  await Tasks.processTask28();
-  await Tasks.processTask33();
-  await Tasks.processTask38();
-  await Tasks.processTask41();
-  // await Tasks.processTask61();
-  // await Tasks.processTask62();
-  await Tasks.processTask63();
-  await Tasks.processTask66();
-  await Tasks.processTask68();
+  // await init();
+  // await syncMXCL2Addresses();
+  // await MXCSnapShotsModel.truncate();
+  // await Tasks.processTask1();
+  // await Tasks.processTask2();
+  // await Tasks.processTask5();
+  // await Tasks.processTask9();
+  // await Tasks.processTask11();
+  // await Tasks.processTask14();
+  // await Tasks.processTask18();
+  // await Tasks.processTask23();
+  // await Tasks.processTask28();
+  // await Tasks.processTask33();
+  // await Tasks.processTask38();
+  // await Tasks.processTask41();
+  // // await Tasks.processTask61();
+  // // await Tasks.processTask62();
+  // await Tasks.processTask63();
+  // await Tasks.processTask66();
+  // await Tasks.processTask68();
   await Tasks.parseDeadlineTasks();
   await Tasks.processDeadlineTasks();
   await generateSnapshots();
@@ -731,7 +731,7 @@ async function generateTask51Table() {
 async function getPublishedTasks(time: number) {
   const taskModels = await MXCTasksModel.findAll({
     where: {
-      expiredAt: { gte: time }
+      expiredAt: { [Op.gte]: time }
     }
   })
   return taskModels.map(v => v.get())
