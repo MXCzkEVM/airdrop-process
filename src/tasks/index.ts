@@ -28,6 +28,7 @@ import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
+import Decimal from "decimal.js";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -588,7 +589,7 @@ export const syncMXCL2Addresses = async () => {
 
 
       const receipt = await MXCL2Provider.getTransactionReceipt(transaction.hash);
-      const transactionAggregateValueMXC = BigNumber.from(addr.get().transaction_aggregate_value_mxc || 0)
+      const transactionAggregateValueMXC = BigNumber.from(new Decimal(addr.get().transaction_aggregate_value_mxc).toString() || 0)
       addr.set('transaction_aggregate_value_mxc', transactionAggregateValueMXC.add(receipt.gasUsed.mul(transaction.gasPrice)).toString())
       addr.set('block_number', i)
       addr.set('dapp_interactions', JSON.stringify(dapp_interactions))
