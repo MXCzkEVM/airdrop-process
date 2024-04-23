@@ -3,7 +3,7 @@ import {MXCTasksModel} from "../models";
 import {DB} from "../db"
 import {Op} from "sequelize";
 export default async function () {
-    await DB.sync()
+    await DB.sync({ alter: true })
     await addGenevaTasks()
     await genevaTaskTestnetIDTwo()
     await resetTestnetBlockNumber()
