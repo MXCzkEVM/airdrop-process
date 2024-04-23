@@ -443,15 +443,49 @@ class Tasks {
 
     }
 
-    static processByWeeklyTasks = async () => {
+    static parseDeadlineTasks = async () => {
       const currentTime = dayjs().valueOf()
-      MXCTasksModel.findAll({
+      const taskModels = await MXCTasksModel.findAll({
         where: {
-          expiredAt: {
-            gte: currentTime
-          }
+          expiredAt: { gte: currentTime }
         }
       })
+      const publishedTasks = taskModels.map(v => v.get())
+      // load by github json
+      const response = await fetch('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
+      // { tank: string, name: string, testnet: boolean, zks: number }[]
+      const dashboardTanks = await response.json() as any[]
+      
+      // filter same tasks
+      const publishingTasks =  dashboardTanks.filter(task => 
+        !publishedTasks.some(it => parseTankUID(it) === parseTankUID(task))
+      )
+
+      if (!publishingTasks.length)
+        return
+      
+      const publishingHandleTasks = publishingTasks.map(item => {
+        return {
+          task_name: item.name,
+          task: item.task,
+          testnet: item.testnet,
+          expiredAt: dayjs(item.expiredAt).valueOf(),
+        }
+      })
+      
+      const processes = publishingHandleTasks.map(task => MXCTasksModel.create(task))
+      await Promise.all(processes)
+
+      console.log('Published from the tasks dashboard: ')
+      publishingTasks.forEach(t => console.log(`task:${parseTankUID(t)} - name:${t.name}`))
+      
+      function parseTankUID({task, testnet}: any) {
+        return `${testnet ? 'testnet' : 'mainnet'}_${task}`
+      }
+    }
+
+    static processDeadlineTasks = async () => {
+      // TODO
     }
 }
 
