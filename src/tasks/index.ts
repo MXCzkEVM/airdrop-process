@@ -470,6 +470,7 @@ class Tasks {
           task: item.task,
           testnet: item.testnet,
           expiredAt: dayjs(item.expiredAt).valueOf(),
+          zks: item.zks
         }
       })
       
