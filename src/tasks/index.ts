@@ -27,7 +27,7 @@ import { MXCTasksModel } from "../models/mxc_tasks";
 import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
-import fetch from "node-fetch";
+import axios from 'axios'
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -451,9 +451,9 @@ class Tasks {
   static parseDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
     // load by github json
-    const response = await fetch('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
+    const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
     // { tank: string, name: string, testnet: boolean, zks: number }[]
-    const dashboardTanks = await response.json() as any[]
+    const dashboardTanks = response.data as  any[]
 
     // filter same tasks
     const publishingTasks = dashboardTanks.filter(task =>
