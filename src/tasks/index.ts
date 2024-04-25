@@ -28,7 +28,6 @@ import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
-import Decimal from "decimal.js";
 import { scientificToDecimal } from "../uitls";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
@@ -487,14 +486,41 @@ class Tasks {
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
     for (const task of publishedTasks) {
       const parseCalls: Record<string, any> = {
-        'mainnet_week-01': (id: any) => Tasks.processTask1(id, timeByStartWeek),
-        'testnet_week-01': (id: any) => Tasks.processTask62(id, timeByStartWeek),
+        'mainnet_week-01': (id: any) => bridge2500MXCEthereumToZkevm(id, timeByStartWeek),
+        'testnet_week-01': (id: any) => bridge2500MXCEthereumToZkevm(id, timeByStartWeek, false),
         'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
         'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
         'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
 
       }
       parseCalls[parseTankUID(task)](task.id)
+    }
+
+    async function bridge2500MXCEthereumToZkevm(task_id: number, time?: number, mainnet = true) {
+      const addressesMap: Map<string, BigNumber> = new Map();
+      const Contracts = mainnet ? ContractAddr.Ethereum : ContractAddr.Sepolia
+      await processERC20Transfer(
+        Contracts[ContractType.MXCTOKEN],
+        ETHProvider,
+        17677439,
+        async (events: TransferEvent[]) => {
+          for (let i = 0; i < events.length; i++) {
+            const [from, to, value] = events[i].args
+            const current = addressesMap.get(from) || BigNumber.from(0)
+            addressesMap.set(from, current.add(value))
+          }
+        },
+        null,
+        Contracts[ContractType.MXCERC20L1Bridge],
+        time
+      )
+      for (const address of addressesMap.keys()) {
+        if (!addressesMap.get(address).gte(parseEther('2500')))
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id },
+        })
+      }
     }
 
     async function swap(task_id: number, time?: number) {
@@ -538,7 +564,7 @@ class Tasks {
       }
     }
     async function createNftCollection() {
-      
+
     }
   }
 }
