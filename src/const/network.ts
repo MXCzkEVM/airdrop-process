@@ -15,6 +15,7 @@ export const MXCL2Provider = new ethers.providers.StaticJsonRpcProvider(MXC_L2_R
 
 export const GenevaProvider = new ethers.providers.StaticJsonRpcProvider(MXC_Geneva_RPC_URL)
 export enum ContractType {
+    NFTCollection = 'NFTCollection',
     MEP2542 = "MEP2542",
     MEP1002Token = "MEP1002Token",
     MEP1002NamingToken = "MEP1002NamingToken",
@@ -46,7 +47,8 @@ export const ContractAddr = {
       [ContractType.MXCAAVEPool]: "0x5985a5028596B0345451D2680b75672248c0fe08",
       [ContractType.MOONToken]: "0x13d65548C25A7448fDBb95ae1CC48266DfE0fc51", // TODO
       [ContractType.MEP2542]: "0xf01eceed6319423bCC953889CB8F35E7084df1dF",
-      [ContractType.MXCERC20L2Bridge]: "0x5F850D2E95076077B4677e6d8cB8a0BCFFB2D26a" // TODO
+      [ContractType.MXCERC20L2Bridge]: "0x5F850D2E95076077B4677e6d8cB8a0BCFFB2D26a", // TODO
+      [ContractType.NFTCollection]: "0xB0284981a50Aa2e5A4135E25dcE687d1E300bF3a",
     },
     MXCL2Mainnet: {
         [ContractType.LPWAN]: "0x2000777700000000000000000000000000000001",
@@ -65,6 +67,7 @@ export const ContractAddr = {
         [ContractType.MXCSwapRouter]: "0x757e5af94fC9b3d4035C2e6Cb1fD304F43c0A1A4",
         [ContractType.MXCAAVEPool]: "0x225F9Bb949cF79CEa914C63A80fD15AE880c82F6",
         [ContractType.XSDToken]: "0x7d2016B09BF46A7CAABD3b45f9e1D6C485A2c729",
+        [ContractType.NFTCollection]: "0x99c8905e91e92d7ba45056ca3d183f70a40b581d",
     },
     Ethereum: {
         [ContractType.MXCERC20L1Bridge]: "0x7C954170305b11572522313b6AD514070ce0339c",

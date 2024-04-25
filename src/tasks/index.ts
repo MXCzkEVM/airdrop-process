@@ -17,7 +17,7 @@ import acquiringMNS, { getMNSAddresses, mnsMainnetGraphClient, mnsGenevaGraphCli
 import acquiringNeoM2pro from "./acquiringNeoM2pro";
 import bridgingMoreThanValueOfAssets from "./bridgingMoreThanValueOfAssets";
 import { parseEther } from "ethers/lib/utils";
-import tradeVolumnOnMXCSwap, { getMXCSwapAddresses } from "./tradeVolumnOnMXCSwap";
+import tradeVolumnOnMXCSwap, { getMXCSwapAddresses, swapExactMXCForTokens } from "./tradeVolumnOnMXCSwap";
 import { getHexagonAddresses, processHexagonBalance } from "./processHexagonBalance";
 import { getERC20Addresses, processERC20Balance } from "./processERC20Balance";
 import { BigNumber, ethers } from "ethers";
@@ -29,7 +29,7 @@ import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
 import Decimal from "decimal.js";
-import {scientificToDecimal} from "../uitls";
+import { scientificToDecimal } from "../uitls";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -455,7 +455,7 @@ class Tasks {
     // load by github json
     const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
     // { tank: string, name: string, testnet: boolean, zks: number }[]
-    const dashboardTanks = response.data as  any[]
+    const dashboardTanks = response.data as any[]
 
     // filter same tasks
     const publishingTasks = dashboardTanks.filter(task =>
@@ -489,8 +489,56 @@ class Tasks {
       const parseCalls: Record<string, any> = {
         'mainnet_week-01': (id: any) => Tasks.processTask1(id, timeByStartWeek),
         'testnet_week-01': (id: any) => Tasks.processTask62(id, timeByStartWeek),
+        'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
+        'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
+        'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
+
       }
       parseCalls[parseTankUID(task)](task.id)
+    }
+
+    async function swap(task_id: number, time?: number) {
+      for (const address of addresses.keys()) {
+        const swaps = await swapExactMXCForTokens(address, undefined, time)
+        if (!swaps.length)
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id: task_id },
+        })
+      }
+    }
+    async function swapWithToSensor1000(task_id: number, time?: number) {
+      for (const address of addresses.keys()) {
+        const swaps = await swapExactMXCForTokens(
+          address,
+          { to: ContractAddr.MXCL2Mainnet[ContractType.SensorToken] },
+          time
+        )
+        const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
+        if (balance < 1000)
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id: task_id },
+        })
+      }
+    }
+    async function swapWithToXsd5000(task_id: number, time?: number) {
+      for (const address of addresses.keys()) {
+        const swaps = await swapExactMXCForTokens(
+          address,
+          { to: ContractAddr.MXCL2Mainnet[ContractType.XSDToken] },
+          time
+        )
+        const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
+        if (balance < 5000)
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id: task_id },
+        })
+      }
+    }
+    async function createNftCollection() {
+      
     }
   }
 }
