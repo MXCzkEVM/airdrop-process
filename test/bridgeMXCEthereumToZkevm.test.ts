@@ -42,7 +42,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
   })
 
   test('processDeadlineTasks', async () => {
-    const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+    const publishedTasks = await getPublishedTasks()
 
     console.log('publishedTasks: ', publishedTasks)
 
