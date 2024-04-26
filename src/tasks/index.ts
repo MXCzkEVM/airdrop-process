@@ -485,28 +485,31 @@ class Tasks {
   static processDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
+
+    console.log('---------publishedTasks', publishedTasks)
+    const parseCalls: Record<string, any> = {
+      'mainnet_week-01': async (id: any) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+        for (const address of ethereumTransferMXCRecords.keys()) {
+          if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
+            continue
+          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+        }
+      },
+      'testnet_week-01': async (id: any) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
+        for (const address of ethereumTransferMXCRecords.keys()) {
+          if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
+            continue
+          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+        }
+      },
+      'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
+      'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
+      'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
+    }
+
     for (const task of publishedTasks) {
-      const parseCalls: Record<string, any> = {
-        'mainnet_week-01': async (id: any) => {
-          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
-          for (const address of ethereumTransferMXCRecords.keys()) {
-            if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
-              continue
-            await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
-          }
-        },
-        'testnet_week-01': async (id: any) => {
-          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
-          for (const address of ethereumTransferMXCRecords.keys()) {
-            if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
-              continue
-            await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
-          }
-        },
-        'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
-        'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
-        'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
-      }
       parseCalls[parseTankUID(task)](task.id)
     }
 
@@ -721,23 +724,23 @@ export const processAll = async () => {
   await init();
   await syncMXCL2Addresses();
   await MXCSnapShotsModel.truncate();
-  await Tasks.processTask1();
-  await Tasks.processTask2();
-  await Tasks.processTask5();
-  await Tasks.processTask9();
-  await Tasks.processTask11();
-  await Tasks.processTask14();
-  await Tasks.processTask18();
-  await Tasks.processTask23();
-  await Tasks.processTask28();
-  await Tasks.processTask33();
-  await Tasks.processTask38();
-  await Tasks.processTask41();
+  // await Tasks.processTask1();
+  // await Tasks.processTask2();
+  // await Tasks.processTask5();
+  // await Tasks.processTask9();
+  // await Tasks.processTask11();
+  // await Tasks.processTask14();
+  // await Tasks.processTask18();
+  // await Tasks.processTask23();
+  // await Tasks.processTask28();
+  // await Tasks.processTask33();
+  // await Tasks.processTask38();
+  // await Tasks.processTask41();
   // await Tasks.processTask61();
   // await Tasks.processTask62();
-  await Tasks.processTask63();
-  await Tasks.processTask66();
-  await Tasks.processTask68();
+  // await Tasks.processTask63();
+  // await Tasks.processTask66();
+  // await Tasks.processTask68();
   await Tasks.parseDeadlineTasks();
   await Tasks.processDeadlineTasks();
   await generateSnapshots();
