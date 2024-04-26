@@ -15,14 +15,15 @@ export default async function processERC20Transfer(
   cb: (events: TransferEvent[]) => Promise<boolean | void>,
   from?: string,
   to?: string,
-  time?: number
+  startTime?: number,
+  endTime?: number
 ) {
   const contract = ERC20__factory.connect(addr, provider);
   await (async () => {
-    const endBlock = await provider.getBlockNumber();
-    
-    if (time)
-      startBlock = await findLastBlockNumberByTime(provider, time)
+    let endBlock = await provider.getBlockNumber();
+
+    if (startTime)
+      [startBlock, endBlock] = await findBlockNumberByTimeInterval(provider, startTime, endTime)
 
     for await (const { fromBlock, toBlock } of generateBlockRanges(startBlock, endBlock)) {
       try {
@@ -31,7 +32,7 @@ export default async function processERC20Transfer(
           fromBlock,
           toBlock
         );
-    
+
 
         if (await cb(events)) {
           return;
@@ -44,13 +45,8 @@ export default async function processERC20Transfer(
   })();
 }
 
-const caches: Record<string, number> = {
 
-}
-
-async function findLastBlockNumberByTime(provider: Provider, time: number) {
-  if (caches[time])
-      return caches[time]
+async function findBlockNumberByTime(provider: Provider, time: number) {
   const latestBlockNumber = await provider.getBlockNumber();
   let startBlockNumber = latestBlockNumber;
   let step = 10000
@@ -58,13 +54,12 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
   let direction = 'increase'
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
-    // 时间控制在半小时范围内
     if (time <= block.timestamp) {
       startBlockNumber -= Math.floor(step / frequency)
       direction === 'increase' && (frequency++)
       continue
     }
-
+    // 时间控制在半小时范围内
     if ((time - block.timestamp) > 1800) {
       startBlockNumber += Math.floor(step / frequency)
       direction === 'decrease' && (frequency++)
@@ -72,6 +67,17 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
     }
     break;
   }
-
   return startBlockNumber;
+}
+
+async function findBlockNumberByTimeInterval(provider: Provider, startTime: number, endTime?: number) {
+  const currentTime = dayjs().unix()
+  if (endTime)
+    endTime = Math.min(currentTime, endTime)
+  return [
+    await findBlockNumberByTime(provider, startTime),
+    endTime
+      ? await findBlockNumberByTime(provider, endTime)
+      : await provider.getBlockNumber()
+  ] as const;
 }

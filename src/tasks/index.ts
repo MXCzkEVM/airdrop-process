@@ -451,7 +451,7 @@ class Tasks {
   }
 
   static parseDeadlineTasks = async () => {
-    const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+    const publishedTasks = await getPublishedTasks(dayjs().unix())
 
     // load by github json
     const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
@@ -471,7 +471,7 @@ class Tasks {
         task_name: item.name,
         task: item.task,
         testnet: item.testnet ? 1 : 0,
-        expiredAt: dayjs().day(6).hour(29).minute(29).second(29).valueOf(),
+        expiredAt: dayjs().day(6).hour(29).minute(29).second(29).unix(),
         zks: item.zks
       }
     })
@@ -484,20 +484,20 @@ class Tasks {
   }
 
   static processDeadlineTasks = async () => {
-    const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+    const publishedTasks = await getPublishedTasks()
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
     const parseCalls: Record<string, any> = {
-      'mainnet_week-01': async (id: any) => {
-        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+      'mainnet_week-01': async (id: any, s: number, e: number) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(true, s, e)
         for (const address of ethereumTransferMXCRecords.keys()) {
           if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
             continue
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
         }
       },
-      'testnet_week-01': async (id: any) => {
-        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
+      'testnet_week-01': async (id: any, s: number, e: number) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(false, s, e)
         for (const address of ethereumTransferMXCRecords.keys()) {
           if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
             continue
@@ -510,7 +510,9 @@ class Tasks {
     }
 
     for (const task of publishedTasks) {
-      await parseCalls[parseTankUID(task)](task.id)
+      const s = dayjs.unix(task.expiredAt).day(1).hour(0).minute(0).second(0).unix()
+      const e = dayjs.unix(task.expiredAt).day(6).hour(59).minute(59).second(59).unix()
+      await parseCalls[parseTankUID(task)](task.id, s, e)
     }
 
     async function swap(task_id: number, time?: number) {

@@ -7,7 +7,7 @@ export interface EthereumTransferMXCRecord {
   value: BigNumber
 }
 
-export async function bridgeMXCEthereumToZkevm(time?: number, mainnet = true) {
+export async function bridgeMXCEthereumToZkevm(mainnet = true, startTime?: number, endTime?: number) {
   const ethereumTransferMXCRecords = new Map<string, BigNumber>()
   const Contracts = mainnet ? ContractAddr.Ethereum : ContractAddr.Sepolia
   const Provider = mainnet ? ETHProvider : SepoliaProvider
@@ -24,7 +24,8 @@ export async function bridgeMXCEthereumToZkevm(time?: number, mainnet = true) {
     },
     null,
     Contracts[ContractType.MXCERC20L1Bridge],
-    time
+    startTime,
+    endTime
   )
   return ethereumTransferMXCRecords
 }
