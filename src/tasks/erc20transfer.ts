@@ -57,6 +57,7 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
 
   let startBlockNumber = latestBlockNumber;
 
+  console.log('scan last time block: ', startBlockNumber)
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
     if (time >= block.timestamp)
