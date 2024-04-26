@@ -739,8 +739,8 @@ export const processAll = async () => {
   await Tasks.processTask33();
   await Tasks.processTask38();
   await Tasks.processTask41();
-  await Tasks.processTask61();
-  await Tasks.processTask62();
+  // await Tasks.processTask61();
+  // await Tasks.processTask62();
   await Tasks.processTask63();
   await Tasks.processTask66();
   await Tasks.processTask68();
