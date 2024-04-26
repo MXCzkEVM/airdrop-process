@@ -452,6 +452,7 @@ class Tasks {
 
   static parseDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+    console.log('---------publishedTasks', publishedTasks)
     // load by github json
     const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
     // { tank: string, name: string, testnet: boolean, zks: number }[]
@@ -486,7 +487,6 @@ class Tasks {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
-    console.log('---------publishedTasks', publishedTasks)
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': async (id: any) => {
         const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
