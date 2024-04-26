@@ -2,12 +2,13 @@ import {beforeEach, describe, expect, test} from 'vitest'
 import { BigNumber } from "ethers"
 import {bridgeMXCEthereumToZkevm} from '../src/tasks/bridgeMXCEthereumToZkevm'
 import dayjs from 'dayjs'
-import { formatEther } from 'ethers/lib/utils'
-import { getPublishedTasks } from '../src/uitls'
+import { formatEther, parseEther } from 'ethers/lib/utils'
+import { getPublishedTasks, parseTankUID } from '../src/uitls'
+import { MXCAddressTaskModel } from '../src/models'
 
 describe('task:bridgeMXCEthereumToZkevm', () => {
   let ethereumTransferMXCRecords: Map<string, BigNumber>
-  const firstWeekTime = dayjs().day(1).hour(0).minute(0).second(0).unix()
+    const firstWeekTime = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
   beforeEach(async () => {
     ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(
@@ -24,6 +25,33 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
   })
 
   test('find Model data item', async () => {
-    console.log('PublishedTasks: ', await getPublishedTasks(firstWeekTime))
+    const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+    const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
+
+    const parseCalls: Record<string, any> = {
+      'mainnet_week-01': async (id: any) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+        for (const address of ethereumTransferMXCRecords.keys()) {
+          if (!ethereumTransferMXCRecords.get(address)?.gte(parseEther('2500')))
+            continue
+          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+        }
+      },
+      'testnet_week-01': async (id: any) => {
+        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
+        for (const address of ethereumTransferMXCRecords.keys()) {
+          if (!ethereumTransferMXCRecords.get(address)?.gte(parseEther('2500')))
+            continue
+          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+        }
+      },
+      // 'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
+      // 'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
+      // 'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
+    }
+
+    for (const task of publishedTasks) {
+      parseCalls[parseTankUID(task)](task.id)
+    }
   })
 })
