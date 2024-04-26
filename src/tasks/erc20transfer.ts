@@ -77,6 +77,12 @@ async function findBlockNumberByTimeInterval(provider: Provider, startTime: numb
   const currentTime = dayjs().unix()
   if (endTime)
     endTime = Math.min(currentTime, endTime)
+
+  console.log({
+    currentTime,
+    startTime,
+    endTime
+  })
   return [
     currentTime < startTime
       ? await findBlockNumberByTime(provider, startTime)
