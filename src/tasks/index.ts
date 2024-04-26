@@ -510,7 +510,7 @@ class Tasks {
     }
 
     for (const task of publishedTasks) {
-      parseCalls[parseTankUID(task)](task.id)
+      await parseCalls[parseTankUID(task)](task.id)
     }
 
     async function swap(task_id: number, time?: number) {

@@ -85,7 +85,6 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
           if (!ethereumTransferMXCRecords.get(address)?.gte(parseEther('2500')))
             continue
 
-          console.log('')
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
         }
       },
