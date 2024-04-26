@@ -68,14 +68,16 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
         for (const address of ethereumTransferMXCRecords.keys()) {
           if (!ethereumTransferMXCRecords.get(address)?.gte(parseEther('2500')))
             continue
-          console.log('address: ', address)
-          console.log('value: ', ethereumTransferMXCRecords.get(address)?.toString())
+          
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
         }
       },
       'testnet_week-01': async (id: any) => {
         const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
         for (const address of ethereumTransferMXCRecords.keys()) {
+          console.log('address: ', address)
+          console.log('value: ', ethereumTransferMXCRecords.get(address)?.toString())
+          console.log('ether: ', parseEther('2500').toString())
           if (!ethereumTransferMXCRecords.get(address)?.gte(parseEther('2500')))
             continue
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
