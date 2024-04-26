@@ -52,24 +52,27 @@ const caches: Record<string, number> = {
 async function findLastBlockNumberByTime(provider: Provider, time: number) {
   if (caches[time])
       return caches[time]
-
   const latestBlockNumber = await provider.getBlockNumber();
-
   let startBlockNumber = latestBlockNumber;
-  let step = 10000;
-
+  let step = 10000
+  let frequency = 1
+  let direction = 'increase'
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
-    console.log('startBlockNumber: ', startBlockNumber)
-    if (time >= block.timestamp)
-      break;
-
-    if (step > 1) {
-      step = Math.ceil(step / 2);
-      startBlockNumber -= step;
-    } else {
-      startBlockNumber--;
+    console.log('scan block number: ', startBlockNumber)
+    // 时间控制在一小时范围内
+    if (time >= block.timestamp) {
+      startBlockNumber -= Math.floor(step / frequency)
+      direction === 'increase' && (frequency++)
+      continue
     }
+
+    if (time - block.timestamp > 3600) {
+      startBlockNumber += Math.floor(step / frequency)
+      direction === 'decrease' && (frequency++)
+      continue
+    }
+    break;
   }
 
   return startBlockNumber;
