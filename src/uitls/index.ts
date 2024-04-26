@@ -37,7 +37,7 @@ export async function getPublishedTasks(time?: number) {
       expiredAt: {
         ...(time
           ? { [Op.gte]: time }
-          : { [Op.not]: true }
+          : { [Op.not]: null }
         ),
       }
     }
