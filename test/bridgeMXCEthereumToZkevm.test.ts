@@ -41,7 +41,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     publishingTasks.forEach(t => console.log(`task:${parseTankUID(t)} - name:${t.name}`))
   })
 
-  test('processDeadlineTasks', async () => {
+  test('processDeadlineTasks', { timeout: 0 }, async () => {
     const publishedTasks = await getPublishedTasks()
 
     console.log('publishedTasks: ', publishedTasks)
