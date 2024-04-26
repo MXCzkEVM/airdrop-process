@@ -62,7 +62,7 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
     if (time >= block.timestamp)
       break;
     console.log('scan last time block: ', startBlockNumber)
-    startBlockNumber--;
+    startBlockNumber -= 10;
   }
 
   return startBlockNumber;
