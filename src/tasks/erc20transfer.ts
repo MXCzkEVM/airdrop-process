@@ -57,14 +57,14 @@ async function findBlockNumberByTime(provider: Provider, time: number) {
     const block = await provider.getBlock(startBlockNumber);
     const difference = time - block.timestamp
     if (difference > 1800) {
-      startBlockNumber -= Math.floor(step / frequency)
-      direction === 'increase' && (frequency++)
+      startBlockNumber += Math.floor(step / frequency)
+      direction === 'decrease' && (frequency++)
       continue
     }
     // 时间控制在半小时范围内
     if (difference < 0) {
-      startBlockNumber += Math.floor(step / frequency)
-      direction === 'decrease' && (frequency++)
+      startBlockNumber -= Math.floor(step / frequency)
+      direction === 'increase' && (frequency++)
       continue
     }
     break;

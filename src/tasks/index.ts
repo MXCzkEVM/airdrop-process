@@ -512,6 +512,7 @@ class Tasks {
     for (const task of publishedTasks) {
       const s = dayjs.unix(task.expiredAt).day(1).hour(0).minute(0).second(0).unix()
       const e = dayjs.unix(task.expiredAt).day(6).hour(59).minute(59).second(59).unix()
+      console.log('s: ', dayjs.unix(s).format())
       await parseCalls[parseTankUID(task)](task.id, s, e)
     }
 
