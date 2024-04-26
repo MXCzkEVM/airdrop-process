@@ -61,13 +61,13 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
     const block = await provider.getBlock(startBlockNumber);
     console.log('scan block number: ', startBlockNumber)
     // 时间控制在一小时范围内
-    if (time >= block.timestamp) {
+    if (time <= block.timestamp) {
       startBlockNumber -= Math.floor(step / frequency)
       direction === 'increase' && (frequency++)
       continue
     }
 
-    if (time - block.timestamp > 3600) {
+    if ((time - block.timestamp) > 1800) {
       startBlockNumber += Math.floor(step / frequency)
       direction === 'decrease' && (frequency++)
       continue
