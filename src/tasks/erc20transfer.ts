@@ -59,7 +59,7 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
   let direction = 'increase'
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
-    console.log('scan block number: ', startBlockNumber)
+    console.log('scan block number: ', dayjs.unix(block.timestamp).format())
     // 时间控制在一小时范围内
     if (time <= block.timestamp) {
       startBlockNumber -= Math.floor(step / frequency)
