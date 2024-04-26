@@ -471,7 +471,7 @@ class Tasks {
         task_name: item.name,
         task: item.task,
         testnet: item.testnet ? 1 : 0,
-        expiredAt: dayjs().day(6).hour(29).minute(29).second(29).unix(),
+        expiredAt: dayjs().day(6).hour(22).unix(),
         zks: item.zks
       }
     })
