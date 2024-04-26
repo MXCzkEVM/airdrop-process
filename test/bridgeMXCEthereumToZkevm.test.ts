@@ -92,6 +92,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     }
 
     for (const task of publishedTasks) {
+      console.log(`run task --- ${task.id}`, parseTankUID(task))
       await parseCalls[parseTankUID(task)]?.(task.id)
     }
   })
