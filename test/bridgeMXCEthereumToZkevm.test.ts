@@ -92,7 +92,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     }
 
     for (const task of publishedTasks) {
-      parseCalls[parseTankUID(task)]?.(task.id)
+      await parseCalls[parseTankUID(task)]?.(task.id)
     }
   })
 })
