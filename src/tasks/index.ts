@@ -29,7 +29,7 @@ import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
 import { scientificToDecimal } from "../uitls";
-import { bridge2500MXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
+import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -487,8 +487,22 @@ class Tasks {
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
     for (const task of publishedTasks) {
       const parseCalls: Record<string, any> = {
-        'mainnet_week-01': (id: any) => bridge2500MXCEthereumToZkevm(id, timeByStartWeek),
-        'testnet_week-01': (id: any) => bridge2500MXCEthereumToZkevm(id, timeByStartWeek, false),
+        'mainnet_week-01': async (id: any) => {
+          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+          for (const address of ethereumTransferMXCRecords.keys()) {
+            if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
+              continue
+            await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+          }
+        },
+        'testnet_week-01': async (id: any) => {
+          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+          for (const address of ethereumTransferMXCRecords.keys()) {
+            if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
+              continue
+            await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
+          }
+        },
         'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
         'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
         'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
