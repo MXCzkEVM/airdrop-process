@@ -17,6 +17,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
   test('Transfer 50 MXC to ZKEVM from 0x0795...0d7A this week', () => {
     console.log('transfer length: ', [...ethereumTransferMXCRecords.values()].length)
     const address = '0x0795D90c6d60F7c77041862E9aE5059B4d5e0d7A'
+    console.log('transfer amount: ', ethereumTransferMXCRecords.get(address))
     expect(ethereumTransferMXCRecords.get(address)?.gte(50))
   })
 })
