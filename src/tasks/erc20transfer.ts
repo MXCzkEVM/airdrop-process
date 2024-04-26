@@ -52,15 +52,17 @@ async function findBlockNumberByTime(provider: Provider, time: number) {
   let step = 10000
   let frequency = 1
   let direction = 'increase'
+  console.log('scan time: ', dayjs.unix(time).format())
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
-    if (!block?.timestamp || time <= block.timestamp) {
+    const difference = time - block.timestamp
+    if (difference > 1800) {
       startBlockNumber -= Math.floor(step / frequency)
       direction === 'increase' && (frequency++)
       continue
     }
     // 时间控制在半小时范围内
-    if ((time - block.timestamp) > 1800) {
+    if (difference < 0) {
       startBlockNumber += Math.floor(step / frequency)
       direction === 'decrease' && (frequency++)
       continue
