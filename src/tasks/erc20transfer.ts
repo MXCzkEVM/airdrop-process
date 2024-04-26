@@ -79,9 +79,8 @@ async function findBlockNumberByTimeInterval(provider: Provider, startTime: numb
     endTime = Math.min(currentTime, endTime)
 
   console.log({
-    currentTime,
-    startTime,
-    endTime
+    a: currentTime <= startTime,
+    b: endTime >= currentTime
   })
   
   return [
