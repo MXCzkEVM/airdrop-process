@@ -56,13 +56,20 @@ async function findLastBlockNumberByTime(provider: Provider, time: number) {
   const latestBlockNumber = await provider.getBlockNumber();
 
   let startBlockNumber = latestBlockNumber;
+  let step = 10000;
 
   while (true) {
     const block = await provider.getBlock(startBlockNumber);
+    console.log('startBlockNumber: ', startBlockNumber)
     if (time >= block.timestamp)
       break;
-    console.log('scan last time block: ', startBlockNumber)
-    startBlockNumber -= 10;
+
+    if (step > 1) {
+      step = Math.ceil(step / 2);
+      startBlockNumber -= step;
+    } else {
+      startBlockNumber--;
+    }
   }
 
   return startBlockNumber;
