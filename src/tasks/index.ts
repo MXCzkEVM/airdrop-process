@@ -452,7 +452,8 @@ class Tasks {
 
   static parseDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
-    console.log('---------publishedTasks', publishedTasks)
+    Logx.info('---------publishedTasks', publishedTasks)
+
     // load by github json
     const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
     // { tank: string, name: string, testnet: boolean, zks: number }[]
