@@ -20,9 +20,9 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
   0
 )
   test('Transfer 50 MXC to ZKEVM from 0x0795...0d7A this week', () => {
-    console.log('transfer length: ', [...ethereumTransferMXCRecords.values()].length)
+    // console.log('transfer length: ', [...ethereumTransferMXCRecords.values()].length)
     const address = '0x0795D90c6d60F7c77041862E9aE5059B4d5e0d7A'
-    console.log('transfer amount: ', formatEther(ethereumTransferMXCRecords.get(address) || '0'))
+    // console.log('transfer amount: ', formatEther(ethereumTransferMXCRecords.get(address) || '0'))
   })
 
   test('parseDeadlineTasks', async () => {
@@ -62,6 +62,8 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
+    console.log('publishedTasks: ', publishedTasks)
+
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': async (id: any) => {
         const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
@@ -74,6 +76,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
       },
       'testnet_week-01': async (id: any) => {
         const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
+        console.log('ethereumTransferMXCRecords.keys()', [...ethereumTransferMXCRecords.keys()].length)
         for (const address of ethereumTransferMXCRecords.keys()) {
           console.log('address: ', address)
           console.log('value: ', ethereumTransferMXCRecords.get(address)?.toString())
@@ -89,7 +92,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     }
 
     for (const task of publishedTasks) {
-      parseCalls[parseTankUID(task)](task.id)
+      parseCalls[parseTankUID(task)]?.(task.id)
     }
   })
 })
