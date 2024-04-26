@@ -496,7 +496,7 @@ class Tasks {
           }
         },
         'testnet_week-01': async (id: any) => {
-          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek)
+          const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(timeByStartWeek, false)
           for (const address of ethereumTransferMXCRecords.keys()) {
             if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
               continue
