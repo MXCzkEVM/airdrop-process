@@ -24,6 +24,7 @@ export default async function processERC20Transfer(
     if (time)
       startBlock = await findLastBlockNumberByTime(provider, time)
 
+    console.log('-----------', startBlock)
     for await (const { fromBlock, toBlock } of generateBlockRanges(startBlock, endBlock)) {
       try {
         let events = await contract.queryFilter(
