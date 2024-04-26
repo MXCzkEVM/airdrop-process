@@ -84,7 +84,7 @@ async function findBlockNumberByTimeInterval(provider: Provider, startTime: numb
   })
   
   return [
-    currentTime <= startTime
+    currentTime >= startTime
       ? await findBlockNumberByTime(provider, startTime)
       : currentBlockNumber - 1,
     endTime
