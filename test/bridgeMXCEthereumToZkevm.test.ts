@@ -9,7 +9,7 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     const firstWeekTime = dayjs().day(1).hour(0).minute(0).second(0).unix()
     ethereumTransferMXCRecords = await bridge2500MXCEthereumToZkevm(
       firstWeekTime,
-      true
+      false
     )
   },
   0
