@@ -4,7 +4,8 @@ import {bridgeMXCEthereumToZkevm} from '../src/tasks/bridgeMXCEthereumToZkevm'
 import dayjs from 'dayjs'
 import { formatEther, parseEther } from 'ethers/lib/utils'
 import { getPublishedTasks, parseTankUID } from '../src/uitls'
-import { MXCAddressTaskModel } from '../src/models'
+import { MXCAddressTaskModel, MXCTasksModel } from '../src/models'
+import axios from 'axios'
 
 describe('task:bridgeMXCEthereumToZkevm', () => {
   let ethereumTransferMXCRecords: Map<string, BigNumber>
@@ -24,7 +25,40 @@ describe('task:bridgeMXCEthereumToZkevm', () => {
     console.log('transfer amount: ', formatEther(ethereumTransferMXCRecords.get(address) || '0'))
   })
 
-  test('find Model data item', async () => {
+  test('parseDeadlineTasks', async () => {
+    const publishedTasks = await getPublishedTasks(dayjs().valueOf())
+
+    // load by github json
+    const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
+    // { tank: string, name: string, testnet: boolean, zks: number }[]
+    const dashboardTanks = response.data as any[]
+
+    // filter same tasks
+    const publishingTasks = dashboardTanks.filter(task =>
+      !publishedTasks.some(it => parseTankUID(it) === parseTankUID(task))
+    )
+
+    if (!publishingTasks.length)
+      return
+
+    const publishingHandleTasks = publishingTasks.map(item => {
+      return {
+        task_name: item.name,
+        task: item.task,
+        testnet: item.testnet ? 1 : 0,
+        expiredAt: dayjs().day(6).hour(29).minute(29).second(29).valueOf(),
+        zks: item.zks
+      }
+    })
+
+    const processes = publishingHandleTasks.map(task => MXCTasksModel.create(task))
+    await Promise.all(processes)
+
+    console.log('Published from the tasks dashboard: ')
+    publishingTasks.forEach(t => console.log(`task:${parseTankUID(t)} - name:${t.name}`))
+  })
+
+  test('processDeadlineTasks', async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
     const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
