@@ -28,7 +28,7 @@ import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
-import { scientificToDecimal } from "../uitls";
+import { getPublishedTasks, parseTankUID, scientificToDecimal } from "../uitls";
 import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
@@ -452,7 +452,6 @@ class Tasks {
 
   static parseDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks(dayjs().valueOf())
-    Logx.info('---------publishedTasks', publishedTasks)
 
     // load by github json
     const response = await axios('https://raw.githubusercontent.com/MXCzkEVM/airdrop-tasks/main/tasks.json')
@@ -725,23 +724,23 @@ export const processAll = async () => {
   await init();
   await syncMXCL2Addresses();
   await MXCSnapShotsModel.truncate();
-  // await Tasks.processTask1();
-  // await Tasks.processTask2();
-  // await Tasks.processTask5();
-  // await Tasks.processTask9();
-  // await Tasks.processTask11();
-  // await Tasks.processTask14();
-  // await Tasks.processTask18();
-  // await Tasks.processTask23();
-  // await Tasks.processTask28();
-  // await Tasks.processTask33();
-  // await Tasks.processTask38();
-  // await Tasks.processTask41();
-  // await Tasks.processTask61();
-  // await Tasks.processTask62();
-  // await Tasks.processTask63();
-  // await Tasks.processTask66();
-  // await Tasks.processTask68();
+  await Tasks.processTask1();
+  await Tasks.processTask2();
+  await Tasks.processTask5();
+  await Tasks.processTask9();
+  await Tasks.processTask11();
+  await Tasks.processTask14();
+  await Tasks.processTask18();
+  await Tasks.processTask23();
+  await Tasks.processTask28();
+  await Tasks.processTask33();
+  await Tasks.processTask38();
+  await Tasks.processTask41();
+  await Tasks.processTask61();
+  await Tasks.processTask62();
+  await Tasks.processTask63();
+  await Tasks.processTask66();
+  await Tasks.processTask68();
   await Tasks.parseDeadlineTasks();
   await Tasks.processDeadlineTasks();
   await generateSnapshots();
@@ -793,16 +792,4 @@ async function generateTask51Table() {
   await MXCTasksModel.findOrCreate({ where: { id: 58, task_name: 'Own more than 3 M2 Pros registered on AXS', zks: 170000 } })
   await MXCTasksModel.findOrCreate({ where: { id: 59, task_name: 'Own 5 M2 Pros registered on AXS', zks: 350000 } })
   await MXCTasksModel.findOrCreate({ where: { id: 60, task_name: 'Own more than 5 M2 Pros registered on AXS', zks: 500000 } })
-}
-
-async function getPublishedTasks(time: number) {
-  const taskModels = await MXCTasksModel.findAll({
-    where: {
-      expiredAt: { [Op.gte]: time }
-    }
-  })
-  return taskModels.map(v => v.get())
-}
-function parseTankUID({ task, testnet }: any) {
-  return `${testnet ? 'testnet' : 'mainnet'}_${task}`
 }
