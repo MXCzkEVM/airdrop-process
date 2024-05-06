@@ -485,7 +485,6 @@ class Tasks {
 
   static processDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks()
-    const timeByStartWeek = dayjs().day(1).hour(0).minute(0).second(0).unix()
 
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': async (id: any, s: number, e: number) => {
@@ -504,9 +503,9 @@ class Tasks {
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
         }
       },
-      'mainnet_week-02': (id: any) => swap(id, timeByStartWeek),
-      'mainnet_week-03': (id: any) => swapWithToSensor1000(id, timeByStartWeek),
-      'mainnet_week-04': (id: any) => swapWithToXsd5000(id, timeByStartWeek),
+      'mainnet_week-02': (id: any, s: number, e: number) => swap(id, s, e),
+      'mainnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e),
+      'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),
     }
 
     for (const task of publishedTasks) {
@@ -516,9 +515,9 @@ class Tasks {
       await parseCalls[parseTankUID(task)](task.id, s, e)
     }
 
-    async function swap(task_id: number, time?: number) {
+    async function swap(task_id: number, s: number, e: number) {
       for (const address of addresses.keys()) {
-        const swaps = await swapExactMXCForTokens(address, undefined, time)
+        const swaps = await swapExactMXCForTokens(address, undefined, s, e)
         if (!swaps.length)
           continue
         await MXCAddressTaskModel.findOrCreate({
@@ -526,12 +525,13 @@ class Tasks {
         })
       }
     }
-    async function swapWithToSensor1000(task_id: number, time?: number) {
+    async function swapWithToSensor1000(task_id: number, s: number, e: number) {
       for (const address of addresses.keys()) {
         const swaps = await swapExactMXCForTokens(
           address,
           { to: ContractAddr.MXCL2Mainnet[ContractType.SensorToken] },
-          time
+          s,
+          e
         )
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 1000)
@@ -541,12 +541,13 @@ class Tasks {
         })
       }
     }
-    async function swapWithToXsd5000(task_id: number, time?: number) {
+    async function swapWithToXsd5000(task_id: number, s: number, e: number) {
       for (const address of addresses.keys()) {
         const swaps = await swapExactMXCForTokens(
           address,
           { to: ContractAddr.MXCL2Mainnet[ContractType.XSDToken] },
-          time
+          s,
+          e
         )
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 5000)

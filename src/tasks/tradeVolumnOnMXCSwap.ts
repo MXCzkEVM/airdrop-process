@@ -1,6 +1,7 @@
 import { GraphQLClient } from "graphql-request";
 
 const queryClient = new GraphQLClient("https://graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev");
+const testnetQueryClient = new GraphQLClient("https://geneva-graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev");
 
 export async function getMXCSwapAddresses() {
   let skip = 0;
@@ -46,33 +47,35 @@ export default async function (address: string) {
 export async function swapExactMXCForTokens(
   address: string,
   swap?: { from?: string, to?: string },
-  timestamp?: string | number
+  startTime?: string | number,
+  endTime?: string | number,
+  testnet?: boolean
 ) {
   let skip = 0;
-
+  const client = testnet ? testnetQueryClient : queryClient
   const data = [] as any[]
   const pairsQuery = [
-    swap.from && `token0: "${swap.from}"`,
-    swap.to && `token1: "${swap.to}"`,
+    swap?.from && `token0: "${swap.from}"`,
+    swap?.to && `token1: "${swap.to}"`,
   ].filter(Boolean)
 
   const swapsQuery = [
-    timestamp && `timestamp_gte: "${timestamp}"`,
+    startTime && `timestamp_gte: "${startTime}"`,
+    endTime && `timestamp_lte: "${endTime}"`,
     `from: "${address}"`,
-    `pair_: {${pairsQuery}}`,
-    `skip: ${skip}`,
-    `first: 1000`
-  ]
+    pairsQuery.length && `pair_: {${pairsQuery}}`,
+  ].filter(Boolean)
   for (let i = 0; i < 100; i++) {
     skip = i * 1000;
 
-    const { swaps }: any = await queryClient.request(
+    const { swaps }: any = await client.request(
       `
         query transactions {
-          id
           swaps(
             orderBy: timestamp,
-            where: {${swapsQuery}}
+            where: {${swapsQuery}},
+            skip: ${skip},
+            first: 1000
           ) {
             from
             pair {
