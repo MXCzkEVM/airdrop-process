@@ -3,7 +3,7 @@ import {MXCMarketplace} from "../../typechain-types/contracts/MXCMarketPlace.sol
 
 const MXC_L2_RPC_URL = "http://149.28.212.112:8545"
 
-const MXC_Geneva_RPC_URL = "http://localhost:8545"
+const MXC_Geneva_RPC_URL = "https://geneva-rpc.moonchain.com"
 
 const Ethereum_RPC_URL = "https://black-wispy-reel.quiknode.pro/c24c6857a5cb34c7c6839be8d2473327ec77f171/"
 
