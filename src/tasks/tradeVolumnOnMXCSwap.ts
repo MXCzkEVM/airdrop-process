@@ -55,8 +55,8 @@ export async function swapExactMXCForTokens(
   const client = testnet ? testnetQueryClient : queryClient
   const data = [] as any[]
   const pairsQuery = [
-    swap?.from && `token0: "${swap.from}"`,
-    swap?.to && `token1: "${swap.to}"`,
+    swap?.from && `token1: "${swap.from}"`,
+    swap?.to && `token0: "${swap.to}"`,
   ].filter(Boolean)
 
   const swapsQuery = [

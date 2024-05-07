@@ -17,7 +17,7 @@ describe('swapWithMxcOrTokens', () => {
   it('address swap for 1000 sensor', async () => {
     const swaps = await swapExactMXCForTokens(
       address,
-      { to: ContractAddr.MXCL2Mainnet[ContractType.SensorToken] },
+      { to: '0x727A7734afBB01C20681Cdd4F68b98F53ddD521b' },
       undefined,
       undefined,
       true
