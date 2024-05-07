@@ -62,6 +62,9 @@ export async function processMSC20Transactions(
   const blocks = await Promise.all(
     arange(startBlock, endBlock).map(index => provider.getBlock(index).catch(() => undefined))
   ).then(blocks => blocks.filter(Boolean))
+
+  console.log('find block details length: ', blocks.length)
+
   console.log('find transaction details start')
   const transactions = await Promise.all(
     blocks.flatMap(block => block.transactions.map((hash:string) => provider.getTransaction(hash)))
