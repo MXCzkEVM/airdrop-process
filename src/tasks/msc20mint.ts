@@ -58,9 +58,11 @@ export async function processMSC20Transactions(
       endTime
     )
 
+  console.log('find block details start')
   const blocks = await Promise.all(
     arange(startBlock, endBlock).map(index => provider.getBlock(index))
   )
+  console.log('find transaction details start')
   const transactions = await Promise.all(
     blocks.flatMap(block => block.transactions.map((hash) => provider.getTransaction(hash)))
   )
