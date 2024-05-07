@@ -76,9 +76,14 @@ export async function findBlockNumberByTimeInterval(provider: Provider, startTim
   if (endTime)
     endTime = Math.min(currentTime, endTime)
 
+  console.log('------------------', 'find start block number', '------------------')
+
   const from = currentTime >= startTime
     ? await findBlockNumberByTime(provider, startTime)
     : currentBlockNumber - 1
+
+
+  console.log('------------------', 'find end block number', '------------------')
 
   const to = endTime
     ? endTime >= currentTime
