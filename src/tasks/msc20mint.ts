@@ -2,7 +2,7 @@ import { Provider } from "@ethersproject/providers";
 import { findBlockNumberByTimeInterval } from "./erc20transfer";
 import { arange } from '@hairy/utils'
 import { toUtf8String } from "ethers/lib/utils";
-import { MXCL2Provider } from "../const/network";
+import { MXCL2Provider, GenevaProvider } from "../const/network";
 export interface ScanDeployJSON {
   p: 'msc-20'
   op: 'deploy'
@@ -49,7 +49,7 @@ export async function processMSC20Transactions(
   startTime?: number,
   endTime?: number
 ) {
-  const provider = MXCL2Provider
+  const provider = mainnet ? MXCL2Provider : GenevaProvider
   let endBlock = await provider.getBlockNumber();
   if (startTime)
     [startBlock, endBlock] = await findBlockNumberByTimeInterval(
