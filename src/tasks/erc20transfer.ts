@@ -91,5 +91,6 @@ export async function findBlockNumberByTimeInterval(provider: Provider, startTim
       : await findBlockNumberByTime(provider, endTime)
     : await provider.getBlockNumber()
 
+  console.log(`find interval block number : [${from}, ${to}]`)
   return [from, to] as const;
 }
