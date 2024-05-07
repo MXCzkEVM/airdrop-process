@@ -57,24 +57,24 @@ export async function processMSC20Transactions(
       startTime,
       endTime
     )
+  const transactions: any[] = []
+  for (const blockNumber of arange(startBlock, endBlock)) {
+    const block = await provider.getBlock(blockNumber)
+    const find = await Promise.all(
+      block.transactions.map((hash: string) => provider.getTransaction(hash))
+    )
+    transactions.push(...find)
+  }
 
-  console.log('find block details start')
-  const blocks = await Promise.all(
-    arange(startBlock, endBlock).map(index => provider.getBlock(index).catch(() => undefined))
-  ).then(blocks => blocks.filter(Boolean))
-
-  console.log('find block details length: ', blocks.length)
 
   console.log('find transaction details start')
-  const transactions = await Promise.all(
-    blocks.flatMap(block => block.transactions.map((hash:string) => provider.getTransaction(hash)))
-  )
+
   return transactions
-  .filter(trn => trn.data.startsWith('0x7b2270223a226d73632d323022'))
-  .map((transaction) => {
-    return {
-      data: JSON.parse(toUtf8String(transaction.data)) as InscriptionJSON, 
-      transaction: transaction,
-    }
-  })
+    .filter(trn => trn.data.startsWith('0x7b2270223a226d73632d323022'))
+    .map((transaction) => {
+      return {
+        data: JSON.parse(toUtf8String(transaction.data)) as InscriptionJSON,
+        transaction: transaction,
+      }
+    })
 }
