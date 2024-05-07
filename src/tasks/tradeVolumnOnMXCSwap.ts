@@ -55,8 +55,8 @@ export async function swapExactMXCForTokens(
   const client = testnet ? testnetQueryClient : queryClient
   const data = [] as any[]
   const pairsQuery = [
-    swap?.from && `token1: "${swap.from}"`,
-    swap?.to && `token0: "${swap.to}"`,
+    swap?.from && `token1: "${swap.from.toLowerCase()}"`,
+    swap?.to && `token0: "${swap.to.toLowerCase()}"`,
   ].filter(Boolean)
 
   const swapsQuery = [
@@ -101,11 +101,10 @@ export async function swapExactMXCForTokens(
           }
         }
       `,
-      { user: address.toLowerCase() }
     )
 
     if (swaps.length === 0)
-      continue;
+      break;
     data.push(...swaps.map((swap: any) => {
       return {
         signer: swap.from,

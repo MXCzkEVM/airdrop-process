@@ -30,6 +30,7 @@ import dayjs from "dayjs";
 import axios from 'axios'
 import { getPublishedTasks, parseTankUID, scientificToDecimal } from "../uitls";
 import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
+import { processMSC20Transactions } from "./msc20mint";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -495,17 +496,10 @@ class Tasks {
           await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
         }
       },
-      'testnet_week-01': async (id: any, s: number, e: number) => {
-        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(false, s, e)
-        for (const address of ethereumTransferMXCRecords.keys()) {
-          if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
-            continue
-          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
-        }
-      },
       'mainnet_week-02': (id: any, s: number, e: number) => swap(id, s, e),
       'mainnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e),
       'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),
+      'mainnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e)
     }
 
     for (const task of publishedTasks) {
@@ -557,6 +551,19 @@ class Tasks {
         })
       }
     }
+    async function mintInscription(task_id: number, s: number, e: number) {
+      const inscriptions = await processMSC20Transactions(true, 17677439, s, e)
+      const mints = inscriptions.filter(inscription => inscription.data.op === 'mint')
+      for (const { transaction } of mints) {
+        for (const address of addresses.keys()) {
+          if (address.toLowerCase() !== transaction.from.toLowerCase())
+            continue
+          await MXCAddressTaskModel.findOrCreate({
+            where: { address, task_id: task_id },
+          })
+        }
+      }
+    } 
     async function createNftCollection() {
 
     }
