@@ -11,6 +11,6 @@ describe('msc20', () => {
     const inscriptions = await processMSC20Transactions(true, 17677439, s, e)
     const mints = inscriptions.filter(inscription => inscription.data.op === 'mint')
     const myMints = mints.filter(({transaction}) => transaction.from.toLowerCase() === address.toLowerCase())
-    console.log(inscriptions)
+    console.log(myMints)
   })
 })
