@@ -68,38 +68,6 @@ export async function swapExactMXCForTokens(
   for (let i = 0; i < 100; i++) {
     skip = i * 1000;
 
-    console.log(`
-    query transactions {
-      swaps(
-        orderBy: timestamp,
-        where: {${swapsQuery}},
-        skip: ${skip},
-        first: 1000
-      ) {
-        from
-        pair {
-          token0 {
-            symbol
-            id
-          }
-          token1 {
-            symbol
-            id
-          }
-          reserve0
-          reserve1
-          reserveETH
-          reserveUSD
-        }
-        amountUSD
-        amount1Out
-        amount1In
-        amount0Out
-        amount0In
-        timestamp
-      }
-    }
-  `)
     const { swaps }: any = await client.request(
       `
         query transactions {

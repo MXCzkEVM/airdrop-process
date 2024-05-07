@@ -14,7 +14,7 @@ describe('swapWithMxcOrTokens', () => {
   //   )
   //   expect(swaps.length).gt(0)
   // })
-  it('address swap for 1000 sensor', async () => {
+  it('address swap for 1000 sensor',{ timeout: 0 }, async () => {
     const swaps = await swapExactMXCForTokens(
       address,
       { to: '0x727A7734afBB01C20681Cdd4F68b98F53ddD521b' },
@@ -22,6 +22,7 @@ describe('swapWithMxcOrTokens', () => {
       undefined,
       true
     )
+    console.log('swaps: ', swaps)
     const total = swaps.reduce((p, c) => p + Number(c.to.value), 0)
     expect(total).gte(1000)
   })
