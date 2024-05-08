@@ -2,6 +2,7 @@ import { describe, it } from "vitest";
 import dayjs from "dayjs";
 import { ContractAddr, ContractType, GenevaProvider, MXCL2Provider } from "../src/const/network";
 import { getHexagonByAddresses } from '../src/tasks/processHexagonBalance'
+import { cellToLatLng } from 'h3-js'
 
 describe('getHexagonByAddresses', () => {
   it('Find Hexagons that match on Monday', async () => {
@@ -9,6 +10,7 @@ describe('getHexagonByAddresses', () => {
       ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
       MXCL2Provider
     )
-    console.log(hexagons)
+    const [lat, lon] = cellToLatLng(hexagons[0].hexagon)
+    console.log({lat, lon})
   })
 })
