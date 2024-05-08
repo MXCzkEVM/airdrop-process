@@ -489,7 +489,7 @@ class Tasks {
     const publishedTasks = await getPublishedTasks()
 
     const parseCalls: Record<string, any> = {
-      'mainnet_week-01': async (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
+      'mainnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
       'mainnet_week-02': (id: any, s: number, e: number) => swap(id, s, e),
       'mainnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e),
       'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),

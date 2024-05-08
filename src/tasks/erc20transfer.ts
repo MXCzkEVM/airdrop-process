@@ -43,13 +43,15 @@ export default async function processERC20Transfer(
   })();
 }
 
-async function findBlockNumberByTime(provider: Provider, time: number) {
+export async function findBlockNumberByTime(provider: Provider, time: number) {
   const latestBlockNumber = await provider.getBlockNumber();
   let startBlockNumber = latestBlockNumber;
   let step = 10000
   let frequency = 1
   let direction = 'increase'
+  let length = 0
   while (true) {
+    length++
     const block = await provider.getBlock(startBlockNumber);
     console.log('------------------', startBlockNumber, '------------------')
     if (time <= block.timestamp) {
@@ -65,6 +67,8 @@ async function findBlockNumberByTime(provider: Provider, time: number) {
     }
     break;
   }
+
+  console.log(`Block Number of queries: ${length}`)
   return startBlockNumber;
 }
 
