@@ -53,7 +53,7 @@ export async function findBlockNumberByTime(provider: Provider, time: number) {
   while (true) {
     length++
     const block = await provider.getBlock(startBlockNumber);
-    console.log('------------------', startBlockNumber, '------------------')
+    
     if (time <= block.timestamp) {
       startBlockNumber -= Math.floor(step / frequency)
       direction === 'increase' && (frequency++)

@@ -4,6 +4,6 @@ import dayjs from "dayjs";
 import { GenevaProvider } from "../src/const/network";
 describe('findBlockNumberByTime', () => {
   it('Find blocks that match on Monday', async () => {
-    await findBlockNumberByTime(GenevaProvider, dayjs().day(-7).unix())
+    await findBlockNumberByTime(GenevaProvider, dayjs().day(-16).unix())
   })
 })
