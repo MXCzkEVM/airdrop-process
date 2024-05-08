@@ -48,26 +48,28 @@ export async function findBlockNumberByTime(provider: Provider, time: number) {
   let low = 0;
   let high = latestBlockNumber;
   let mid;
-  let length = 0
   
   while (low <= high) {
-    length++
     mid = Math.floor((low + high) / 2);
     const block = await provider.getBlock(mid);
     
+    console.log(`Searching in range ${low} - ${high}, current mid is ${mid}`);
+    
     if (block.timestamp === time) {
+      console.log(`Found exact match at block number ${mid}`);
       return mid;
-    } else if (block.timestamp < time) {
+    } 
+    else if (block.timestamp < time) {
       low = mid + 1;
-    } else {
+    } 
+    else {
       high = mid - 1;
     }
   }
 
-  console.log(`Block Number of queries: ${length}`)
-
-  // If no exact timestamp match, return the closest lower block number
-  return (await provider.getBlock(mid)).timestamp < time ? mid : mid - 1;
+  const closestBlockNumber = (await provider.getBlock(mid)).timestamp < time ? mid : mid - 1;
+  console.log(`No exact match, returning closest lower block number ${closestBlockNumber}`);
+  return closestBlockNumber;
 }
 
 export async function findBlockNumberByTimeInterval(provider: Provider, startTime: number, endTime?: number) {

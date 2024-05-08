@@ -47,3 +47,19 @@ export async function getPublishedTasks(time?: number) {
 export function parseTankUID({ task, testnet }: any) {
   return `${testnet ? 'testnet' : 'mainnet'}_${task}`
 }
+
+export function isInUSA(latitude: number, longitude: number) {
+  if (latitude >= 24.396308 && latitude <= 49.384358 && longitude >= -125.000000 && longitude <= -66.934570) {
+      return true;
+  } else {
+      return false;
+  }
+}
+
+export function isInFrance(latitude: number, longitude: number) {
+  if (latitude >= 41.303 && latitude <= 50.100 && longitude >= -5.266007 && longitude <= 9.662499) {
+      return true;
+  } else {
+      return false;
+  }
+}

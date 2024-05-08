@@ -18,7 +18,7 @@ import acquiringNeoM2pro from "./acquiringNeoM2pro";
 import bridgingMoreThanValueOfAssets from "./bridgingMoreThanValueOfAssets";
 import { parseEther } from "ethers/lib/utils";
 import tradeVolumnOnMXCSwap, { getMXCSwapAddresses, swapExactMXCForTokens } from "./tradeVolumnOnMXCSwap";
-import { getHexagonAddresses, processHexagonBalance } from "./processHexagonBalance";
+import { getHexagonByAddresses, processHexagonBalance } from "./processHexagonBalance";
 import { getERC20Addresses, processERC20Balance } from "./processERC20Balance";
 import { BigNumber, ethers } from "ethers";
 import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
@@ -252,20 +252,23 @@ class Tasks {
 
   //Minting N hexagon 38-40
   static processTask38 = async () => {
-    const addresses = await getHexagonAddresses(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider)
+    const hexagons = await getHexagonByAddresses(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider)
 
     const taskIds = {
       1: 38,
       2: 39,
       3: 40
     }
-    for (let i = 0; i < addresses.length; i++) {
-      const balance = await processHexagonBalance(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider, addresses[i])
+    for (let i = 0; i < hexagons.length; i++) {
+      const balance = await processHexagonBalance(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider, hexagons[i].address)
       for (const amount of Object.keys(taskIds)) {
         if (balance >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number;
           await MXCAddressTaskModel.findOrCreate({
-            where: { address: ethers.utils.getAddress(addresses[i]), task_id: taskId },
+            where: {
+              address: ethers.utils.getAddress(hexagons[i].address),
+              task_id: taskId
+            },
           })
         }
       }
@@ -580,7 +583,9 @@ class Tasks {
         }
       }
     }
-
+    async function mintHexagonInUSA() {
+     
+    }
   }
 }
 
