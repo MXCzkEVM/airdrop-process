@@ -45,31 +45,29 @@ export default async function processERC20Transfer(
 
 export async function findBlockNumberByTime(provider: Provider, time: number) {
   const latestBlockNumber = await provider.getBlockNumber();
-  let startBlockNumber = latestBlockNumber;
-  let step = 10000
-  let frequency = 1
-  let direction = 'increase'
+  let low = 0;
+  let high = latestBlockNumber;
+  let mid;
   let length = 0
-  while (true) {
+  
+  while (low <= high) {
     length++
-    const block = await provider.getBlock(startBlockNumber);
+    mid = Math.floor((low + high) / 2);
+    const block = await provider.getBlock(mid);
     
-    if (time <= block.timestamp) {
-      startBlockNumber -= Math.floor(step / frequency)
-      direction === 'increase' && (frequency++)
-      continue
+    if (block.timestamp === time) {
+      return mid;
+    } else if (block.timestamp < time) {
+      low = mid + 1;
+    } else {
+      high = mid - 1;
     }
-    // 时间控制在半小时范围内
-    if ((time - block.timestamp) > 1800) {
-      startBlockNumber += Math.floor(step / frequency)
-      direction === 'decrease' && (frequency++)
-      continue
-    }
-    break;
   }
 
   console.log(`Block Number of queries: ${length}`)
-  return startBlockNumber;
+
+  // If no exact timestamp match, return the closest lower block number
+  return (await provider.getBlock(mid)).timestamp < time ? mid : mid - 1;
 }
 
 export async function findBlockNumberByTimeInterval(provider: Provider, startTime: number, endTime?: number) {
