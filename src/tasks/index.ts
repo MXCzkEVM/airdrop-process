@@ -31,6 +31,7 @@ import axios from 'axios'
 import { getPublishedTasks, parseTankUID, scientificToDecimal } from "../uitls";
 import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
 import { processMSC20Transactions } from "./msc20mint";
+import NFTCollectionEvents from "./NFTCollectionCreate";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -488,18 +489,12 @@ class Tasks {
     const publishedTasks = await getPublishedTasks()
 
     const parseCalls: Record<string, any> = {
-      'mainnet_week-01': async (id: any, s: number, e: number) => {
-        const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(true, s, e)
-        for (const address of ethereumTransferMXCRecords.keys()) {
-          if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
-            continue
-          await MXCAddressTaskModel.findOrCreate({ where: { address, task_id: id } })
-        }
-      },
+      'mainnet_week-01': async (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
       'mainnet_week-02': (id: any, s: number, e: number) => swap(id, s, e),
       'mainnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e),
       'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),
-      'mainnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e)
+      'mainnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e),
+      'mainnet_week-06': (id: any, s: number, e: number) => createNftCollection(id, s, e),
     }
 
     for (const task of publishedTasks) {
@@ -509,6 +504,14 @@ class Tasks {
       await parseCalls[parseTankUID(task)](task.id, s, e)
     }
 
+    async function bridge2500MXC(task_id: number, s: number, e: number) {
+      const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(true, s, e)
+      for (const address of ethereumTransferMXCRecords.keys()) {
+        if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
+          continue
+        await MXCAddressTaskModel.findOrCreate({ where: { address, task_id } })
+      }
+    }
     async function swap(task_id: number, s: number, e: number) {
       for (const address of addresses.keys()) {
         const swaps = await swapExactMXCForTokens(address, undefined, s, e)
@@ -563,10 +566,21 @@ class Tasks {
           })
         }
       }
-    } 
-    async function createNftCollection() {
-
     }
+    async function createNftCollection(task_id: number, s: number, e: number) {
+      const events = await NFTCollectionEvents(s, e)
+      for (const event of events) {
+        const [from, to, value] = event.args
+        for (const address of addresses.keys()) {
+          if (address.toLowerCase() !== from.toLowerCase())
+            continue
+          await MXCAddressTaskModel.findOrCreate({
+            where: { address, task_id: task_id },
+          })
+        }
+      }
+    }
+
   }
 }
 

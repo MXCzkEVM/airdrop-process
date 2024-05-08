@@ -32,8 +32,6 @@ export default async function processERC20Transfer(
           fromBlock,
           toBlock
         );
-
-
         if (await cb(events)) {
           return;
         }

@@ -60,10 +60,9 @@ export async function processMSC20Transactions(
   const transactions: any[] = []
   for (const blockNumber of arange(startBlock, endBlock)) {
     const block = await provider.getBlock(blockNumber)
-    const find = await Promise.all(
-      block.transactions.map((hash: string) => provider.getTransaction(hash))
-    )
-    transactions.push(...find)
+    for (const hash of block.transactions) {
+      transactions.push(await provider.getTransaction(hash))
+    }
   }
 
 

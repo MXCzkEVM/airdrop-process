@@ -224,6 +224,7 @@ export type { LPWANMock } from "./contracts/token/mocks/lpwanMock.sol/LPWANMock"
 export { LPWANMock__factory } from "./factories/contracts/token/mocks/lpwanMock.sol/LPWANMock__factory";
 export type { ProxiedMEP1002NamingTokenMock } from "./contracts/token/mocks/MEP1002NamingTokenMock.sol/ProxiedMEP1002NamingTokenMock";
 export { ProxiedMEP1002NamingTokenMock__factory } from "./factories/contracts/token/mocks/MEP1002NamingTokenMock.sol/ProxiedMEP1002NamingTokenMock__factory";
+export { NFTCollectionV4__factory } from "./factories/contracts/NFTCollectionV4";
 export type { ProxiedMEP1002TokenMock } from "./contracts/token/mocks/MEP1002TokenMock.sol/ProxiedMEP1002TokenMock";
 export { ProxiedMEP1002TokenMock__factory } from "./factories/contracts/token/mocks/MEP1002TokenMock.sol/ProxiedMEP1002TokenMock__factory";
 export type { ProxiedMEP1004TokenMock } from "./contracts/token/mocks/MEP1004TokenMock.sol/ProxiedMEP1004TokenMock";
