@@ -14,7 +14,7 @@ describe('findErc20Deployed', () => {
     )
     const events = await contract.queryFilter(
       'ERC20Deployed',
-      17677439,
+      1,
       await provider.getBlockNumber()
     )
    console.log('events ---', events)
