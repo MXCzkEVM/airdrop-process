@@ -8,7 +8,7 @@ import {
   SepoliaProvider,
   GenevaProvider
 } from "../const/network";
-import processERC20Transfer from "./erc20transfer";
+import processERC20Transfer, { findBlockNumberByTimeInterval } from "./erc20transfer";
 import { TransferEvent } from "../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20";
 import { MXCAddressTaskModel } from '../models';
 import { MXCAddressesModel } from "../models/mxc_addresses";
@@ -20,7 +20,7 @@ import { parseEther } from "ethers/lib/utils";
 import tradeVolumnOnMXCSwap, { getMXCSwapAddresses, swapExactMXCForTokens } from "./tradeVolumnOnMXCSwap";
 import { getHexagonByAddresses, processHexagonBalance } from "./processHexagonBalance";
 import { getERC20Addresses, processERC20Balance } from "./processERC20Balance";
-import { BigNumber, ethers } from "ethers";
+import { BigNumber, Contract, ethers } from "ethers";
 import tradeVolumnOnNFTMarketplace from "./tradeVolumnOnNFTMarketplace";
 import { MXCSnapShotsModel } from "../models/mxc_snapshots";
 import { MXCTasksModel } from "../models/mxc_tasks";
@@ -33,6 +33,7 @@ import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
 import { processMSC20Transactions } from "./msc20mint";
 import NFTCollectionEvents from "./NFTCollectionCreate";
 import { cellToLatLng } from "h3-js";
+import erc20factory from "../const/contracts/erc20factory";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -501,6 +502,8 @@ class Tasks {
       'mainnet_week-06': (id: any, s: number, e: number) => createNftCollection(id, s, e),
       'mainnet_week-07': (id: any, s: number, e: number) => mintHexagonInUSA(id, s, e),
       'mainnet_week-08': (id: any, s: number, e: number) => mintHexagonInFrance(id, s, e),
+      'mainnet_week-09': (id: any, s: number, e: number) => createOneTokens(id, s, e),
+      'mainnet_week-10': (id: any, s: number, e: number) => mntOneNEOMiner(id, s, e),
     }
 
     for (const task of publishedTasks) {
@@ -515,7 +518,7 @@ class Tasks {
       for (const address of ethereumTransferMXCRecords.keys()) {
         if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
           continue
-        await MXCAddressTaskModel.findOrCreate({ where: { address, task_id } })
+        await findOrCreateTask(address, task_id)
       }
     }
     async function swap(task_id: number, s: number, e: number) {
@@ -523,9 +526,7 @@ class Tasks {
         const swaps = await swapExactMXCForTokens(address, undefined, s, e)
         if (!swaps.length)
           continue
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address, task_id: task_id },
-        })
+        await findOrCreateTask(address, task_id)
       }
     }
     async function swapWithToSensor1000(task_id: number, s: number, e: number) {
@@ -539,9 +540,7 @@ class Tasks {
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 1000)
           continue
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address, task_id: task_id },
-        })
+        await findOrCreateTask(address, task_id)
       }
     }
     async function swapWithToXsd5000(task_id: number, s: number, e: number) {
@@ -555,9 +554,7 @@ class Tasks {
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 5000)
           continue
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address, task_id: task_id },
-        })
+        await findOrCreateTask(address, task_id)
       }
     }
     async function mintInscription(task_id: number, s: number, e: number) {
@@ -595,9 +592,7 @@ class Tasks {
       for (const { address, hexagon } of hexagons) {
         if (!isInUSA(...cellToLatLng(hexagon)))
           continue
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address, task_id: task_id },
-        })
+        await findOrCreateTask(address, task_id)
       }
     }
     async function mintHexagonInFrance(task_id: number, s: number, e: number) {
@@ -609,10 +604,45 @@ class Tasks {
       for (const { address, hexagon } of hexagons) {
         if (!isInFrance(...cellToLatLng(hexagon)))
           continue
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address, task_id: task_id },
-        })
+        await findOrCreateTask(address, task_id)
       }
+    }
+    async function createOneTokens(task_id: number, s: number, e: number) {
+      const provider = MXCL2Provider
+      const contract = new Contract(
+        erc20factory.address,
+        erc20factory.abi,
+        provider
+      )
+      const [fromBlock, toBlock] = await findBlockNumberByTimeInterval(
+        provider,
+        s,
+        e
+      )
+      const events = await contract.queryFilter(
+        'ERC20Deployed',
+        fromBlock, toBlock
+      )
+      const operators = events.map(event => event.args?.operator || '')
+      for (const operator of operators) {
+        await findOrCreateTask(operator, task_id)
+      }
+    }
+    async function mntOneNEOMiner(task_id: number, s: number, e: number) {
+      const mep1004Map = await acquiringNeoM2pro()
+      for (const address of mep1004Map.keys()) {
+        const machines = mep1004Map.get(address)
+        const lengthByNEO = machines.filter((item) => item.sncode.startsWith('NEO')).length
+        // const lengthByM2X = machines.filter((item) => item.sncode.startsWith('M2X')).length
+        if (lengthByNEO)
+          findOrCreateTask(address, task_id)
+      }
+    }
+
+    async function findOrCreateTask(address: string, id: string | number) {
+      await MXCAddressTaskModel.findOrCreate({ 
+        where: { address: ethers.utils.getAddress(address), task_id: id }
+       })
     }
   }
 }
