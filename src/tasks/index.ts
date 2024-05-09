@@ -28,10 +28,11 @@ import providingLiquidityOnMXCSwap from "./providingLiquidityOnMXCSwap";
 import migrate from "../migrate";
 import dayjs from "dayjs";
 import axios from 'axios'
-import { getPublishedTasks, parseTankUID, scientificToDecimal } from "../uitls";
+import { getPublishedTasks, isInFrance, isInUSA, parseTankUID, scientificToDecimal } from "../uitls";
 import { bridgeMXCEthereumToZkevm } from "./bridgeMXCEthereumToZkevm";
 import { processMSC20Transactions } from "./msc20mint";
 import NFTCollectionEvents from "./NFTCollectionCreate";
+import { cellToLatLng } from "h3-js";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -498,6 +499,8 @@ class Tasks {
       'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),
       'mainnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e),
       'mainnet_week-06': (id: any, s: number, e: number) => createNftCollection(id, s, e),
+      'mainnet_week-07': (id: any, s: number, e: number) => mintHexagonInUSA(id, s, e),
+      'mainnet_week-08': (id: any, s: number, e: number) => mintHexagonInFrance(id, s, e),
     }
 
     for (const task of publishedTasks) {
@@ -583,8 +586,33 @@ class Tasks {
         }
       }
     }
-    async function mintHexagonInUSA() {
-     
+    async function mintHexagonInUSA(task_id: number, s: number, e: number) {
+      const hexagons = await getHexagonByAddresses(
+        ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
+        MXCL2Provider,
+        s, e
+      )
+      for (const { address, hexagon } of hexagons) {
+        if (!isInUSA(...cellToLatLng(hexagon)))
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id: task_id },
+        })
+      }
+    }
+    async function mintHexagonInFrance(task_id: number, s: number, e: number) {
+      const hexagons = await getHexagonByAddresses(
+        ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
+        MXCL2Provider,
+        s, e
+      )
+      for (const { address, hexagon } of hexagons) {
+        if (!isInFrance(...cellToLatLng(hexagon)))
+          continue
+        await MXCAddressTaskModel.findOrCreate({
+          where: { address, task_id: task_id },
+        })
+      }
     }
   }
 }

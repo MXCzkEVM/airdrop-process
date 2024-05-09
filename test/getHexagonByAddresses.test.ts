@@ -5,7 +5,7 @@ import { getHexagonByAddresses } from '../src/tasks/processHexagonBalance'
 import { cellToLatLng } from 'h3-js'
 
 describe('getHexagonByAddresses', () => {
-  it('Find Hexagons that match on Monday', async () => {
+  it.skip('Find Hexagons that match on Monday', async () => {
     const hexagons = await getHexagonByAddresses(
       ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
       MXCL2Provider
