@@ -12,11 +12,7 @@ describe('findErc20Deployed', () => {
       erc20factory.abi,
       provider
     )
-    const events = await contract.queryFilter(
-      'ERC20Deployed',
-      1,
-      await provider.getBlockNumber()
-    )
+    const events = await contract.queryFilter('ERC20Deployed')
    console.log('events ---', events)
   })
 })
