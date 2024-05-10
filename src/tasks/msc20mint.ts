@@ -1,8 +1,16 @@
 import { Provider } from "@ethersproject/providers";
 import { findBlockNumberByTimeInterval } from "./erc20transfer";
-import { arange } from '@hairy/utils'
 import { toUtf8String } from "ethers/lib/utils";
 import { MXCL2Provider, GenevaProvider } from "../const/network";
+
+function arange(x1: number, x2: number, stp = 1, z: any[] = [], z0 = z.length) {
+  if (!x2)
+    x1 -= x2 = x1;
+  for (let z1 = z0 + Math.max(Math.ceil((++x2 - x1) / stp), 0); z0 < z1; x1 += stp)
+    z[z0++] = x1;
+  return z;
+}
+
 export interface ScanDeployJSON {
   p: 'msc-20'
   op: 'deploy'
