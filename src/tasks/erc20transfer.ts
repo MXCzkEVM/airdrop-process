@@ -75,9 +75,7 @@ export async function findBlockNumberByTime(provider: Provider, time: number) {
 export async function findBlockNumberByTimeInterval(provider: Provider, startTime: number, endTime?: number) {
   const currentTime = dayjs().unix()
   const currentBlockNumber = await provider.getBlockNumber()
-  if (endTime)
-    endTime = Math.min(currentTime, endTime)
-
+  endTime = endTime ? Math.min(currentTime, endTime)  : currentTime
   console.log('------------------', 'find start block number', '------------------')
 
   const from = currentTime >= startTime

@@ -29,8 +29,8 @@ export async function getHexagonByAddresses(
         );
         events.forEach((e) => {
           data.push({
+            hexagon: e.args.tokenId.toHexString(),
             address: e.args.to,
-            hexagon: e.args.tokenId.toHexString()
           })
         })
 

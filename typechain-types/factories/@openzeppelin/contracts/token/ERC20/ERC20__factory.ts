@@ -308,7 +308,6 @@ type ERC20ConstructorParams =
 const isSuperArgs = (
   xs: ERC20ConstructorParams
 ): xs is ConstructorParameters<typeof ContractFactory> => xs.length > 1;
-
 export class ERC20__factory extends ContractFactory {
   constructor(...args: ERC20ConstructorParams) {
     if (isSuperArgs(args)) {

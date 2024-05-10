@@ -34,6 +34,8 @@ import { processMSC20Transactions } from "./msc20mint";
 import NFTCollectionEvents from "./NFTCollectionCreate";
 import { cellToLatLng } from "h3-js";
 import erc20factory from "../const/contracts/erc20factory";
+import { MEP1002Token__factory } from "../../typechain-types";
+import { hasHeldTokenInDays } from "./hasHeldTokenInDays";
 export let addresses: Map<string, MXCAddressesModel> = new Map();
 
 class Tasks {
@@ -503,7 +505,9 @@ class Tasks {
       'mainnet_week-07': (id: any, s: number, e: number) => mintHexagonInUSA(id, s, e),
       'mainnet_week-08': (id: any, s: number, e: number) => mintHexagonInFrance(id, s, e),
       'mainnet_week-09': (id: any, s: number, e: number) => createOneTokens(id, s, e),
-      'mainnet_week-10': (id: any, s: number, e: number) => mntOneNEOMiner(id, s, e),
+      'mainnet_week-10': (id: any, s: number, e: number) => mintOneNEOMiner(id, s, e),
+      'mainnet_week-11': (id: any, s: number, e: number) => holdCRAB30days(id, s, e),
+      'mainnet_week-12': (id: any, s: number, e: number) => setMinerName(id, s, e),
     }
 
     for (const task of publishedTasks) {
@@ -628,21 +632,54 @@ class Tasks {
         await findOrCreateTask(operator, task_id)
       }
     }
-    async function mntOneNEOMiner(task_id: number, s: number, e: number) {
-      const mep1004Map = await acquiringNeoM2pro()
+    async function mintOneNEOMiner(task_id: number, s: number, e: number) {
+      const mep1004Map = await acquiringNeoM2pro(s, e)
       for (const address of mep1004Map.keys()) {
         const machines = mep1004Map.get(address)
         const lengthByNEO = machines.filter((item) => item.sncode.startsWith('NEO')).length
         // const lengthByM2X = machines.filter((item) => item.sncode.startsWith('M2X')).length
         if (lengthByNEO)
-          findOrCreateTask(address, task_id)
+          await findOrCreateTask(address, task_id)
       }
+    }
+    async function setMinerName(task_id: number, s: number, e: number) {
+      const mep1002 = MEP1002Token__factory.connect(
+        ContractAddr.MXCL2Mainnet[ContractType.MEP1002Token],
+        MXCL2Provider
+      )
+      const mep1004Map = await acquiringNeoM2pro(s, e)
+      const updateNameEvents = await mep1002.queryFilter(
+        mep1002.filters.MEP1002TokenUpdateName(),
+        s,
+        e
+      )
+      const updateNameMep1002s = updateNameEvents.map(e => e.args.tokenId.toHexString())
+
+      for (const address of mep1004Map.keys()) {
+        const machines = mep1004Map.get(address)
+        const machinesByNEO = machines.filter((item) => item.sncode.startsWith('NEO'))
+        for (const { mep1002TokenId } of machinesByNEO) {
+          if (!updateNameMep1002s.includes(mep1002TokenId))
+            continue
+          await findOrCreateTask(address, task_id)
+        }
+      }
+    }
+    async function holdCRAB30days(task_id: number, s: number, e: number) {
+      const inHeldCRABAddresses = await hasHeldTokenInDays(
+        MXCL2Provider,
+        [...addresses.keys()],
+        ContractAddr.MXCL2Mainnet[ContractType.CrabToken],
+        e
+      )
+      for (const address of inHeldCRABAddresses)
+        await findOrCreateTask(address, task_id)
     }
 
     async function findOrCreateTask(address: string, id: string | number) {
-      await MXCAddressTaskModel.findOrCreate({ 
+      await MXCAddressTaskModel.findOrCreate({
         where: { address: ethers.utils.getAddress(address), task_id: id }
-       })
+      })
     }
   }
 }

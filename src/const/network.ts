@@ -32,6 +32,7 @@ export enum ContractType {
     MNS = "MNS",
     XSDToken = "XSDToken",
     MOONToken = "MOONToken",
+    CrabToken = 'CrabToken',
     MXCMarketPlace = "MXCMarketPlace",
     MXCSwapRouter = "MXCSwapRouter",
     MXCAAVEPool = "MXCAAVEPool"
@@ -68,6 +69,7 @@ export const ContractAddr = {
         [ContractType.MXCAAVEPool]: "0x225F9Bb949cF79CEa914C63A80fD15AE880c82F6",
         [ContractType.XSDToken]: "0x7d2016B09BF46A7CAABD3b45f9e1D6C485A2c729",
         [ContractType.NFTCollection]: "0x99c8905e91e92d7ba45056ca3d183f70a40b581d",
+        [ContractType.CrabToken]: '0x432DA7aC74e83417d4c683ff283bBB8F7E8B09b8'
     },
     Ethereum: {
         [ContractType.MXCERC20L1Bridge]: "0x7C954170305b11572522313b6AD514070ce0339c",
