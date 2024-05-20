@@ -495,19 +495,31 @@ class Tasks {
   static processDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks()
 
+    const xsd = ContractAddr.MXCL2Mainnet[ContractType.XSDToken]
+
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
+      'testnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e, true),
       'mainnet_week-02': (id: any, s: number, e: number) => swap(id, s, e),
+      'testnet_week-02': (id: any, s: number, e: number) => swap(id, s, e, true),
       'mainnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e),
+      'testnet_week-03': (id: any, s: number, e: number) => swapWithToSensor1000(id, s, e, true),
       'mainnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e),
+      'testnet_week-04': (id: any, s: number, e: number) => swapWithToXsd5000(id, s, e, true),
       'mainnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e),
+      'testnet_week-05': (id: any, s: number, e: number) => mintInscription(id, s, e, true),
       'mainnet_week-06': (id: any, s: number, e: number) => createNftCollection(id, s, e),
+      'testnet_week-06': (id: any, s: number, e: number) => createNftCollection(id, s, e, true),
       'mainnet_week-07': (id: any, s: number, e: number) => mintHexagonInUSA(id, s, e),
+      'testnet_week-07': (id: any, s: number, e: number) => mintHexagonInUSA(id, s, e, true),
       'mainnet_week-08': (id: any, s: number, e: number) => mintHexagonInFrance(id, s, e),
+      'testnet_week-08': (id: any, s: number, e: number) => mintHexagonInFrance(id, s, e, true),
       'mainnet_week-09': (id: any, s: number, e: number) => createOneTokens(id, s, e),
       'mainnet_week-10': (id: any, s: number, e: number) => mintOneNEOMiner(id, s, e),
+      'testnet_week-10': (id: any, s: number, e: number) => mintOneNEOMiner(id, s, e, true),
       'mainnet_week-11': (id: any, s: number, e: number) => holdCRAB30days(id, s, e),
       'mainnet_week-12': (id: any, s: number, e: number) => setMinerName(id, s, e),
+      'testnet_week-12': (id: any, s: number, e: number) => setMinerName(id, s, e, true),
     }
 
     for (const task of publishedTasks) {
@@ -517,52 +529,48 @@ class Tasks {
       await parseCalls?.[parseTankUID(task)]?.(task.id, s, e)
     }
 
-    async function bridge2500MXC(task_id: number, s: number, e: number) {
-      const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(true, s, e)
+    async function bridge2500MXC(task_id: number, s: number, e: number, testnet = false) {
+      const ethereumTransferMXCRecords = await bridgeMXCEthereumToZkevm(s, e, testnet)
       for (const address of ethereumTransferMXCRecords.keys()) {
         if (!ethereumTransferMXCRecords.get(address).gte(parseEther('2500')))
           continue
         await findOrCreateTask(address, task_id)
       }
     }
-    async function swap(task_id: number, s: number, e: number) {
+    async function swap(task_id: number, s: number, e: number, testnet = false) {
       for (const address of addresses.keys()) {
-        const swaps = await swapExactMXCForTokens(address, undefined, s, e)
+        const swaps = await swapExactMXCForTokens(address, undefined, s, e, testnet)
         if (!swaps.length)
           continue
         await findOrCreateTask(address, task_id)
       }
     }
-    async function swapWithToSensor1000(task_id: number, s: number, e: number) {
+    async function swapWithToSensor1000(task_id: number, s: number, e: number, testnet = false) {
+      const contract = testnet
+        ? ContractAddr.MXCGeneva[ContractType.SensorToken]
+        : ContractAddr.MXCL2Mainnet[ContractType.SensorToken]
       for (const address of addresses.keys()) {
-        const swaps = await swapExactMXCForTokens(
-          address,
-          { to: ContractAddr.MXCL2Mainnet[ContractType.SensorToken] },
-          s,
-          e
-        )
+        const swaps = await swapExactMXCForTokens(address, { to: contract }, s, e, testnet)
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 1000)
           continue
         await findOrCreateTask(address, task_id)
       }
     }
-    async function swapWithToXsd5000(task_id: number, s: number, e: number) {
+    async function swapWithToXsd5000(task_id: number, s: number, e: number, testnet = false) {
+      const contract = testnet
+        ? ContractAddr.MXCGeneva[ContractType.XSDToken]
+        : ContractAddr.MXCL2Mainnet[ContractType.XSDToken]
       for (const address of addresses.keys()) {
-        const swaps = await swapExactMXCForTokens(
-          address,
-          { to: ContractAddr.MXCL2Mainnet[ContractType.XSDToken] },
-          s,
-          e
-        )
+        const swaps = await swapExactMXCForTokens(address, { to: contract }, s, e, testnet)
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 5000)
           continue
         await findOrCreateTask(address, task_id)
       }
     }
-    async function mintInscription(task_id: number, s: number, e: number) {
-      const inscriptions = await processMSC20Transactions(true, 17677439, s, e)
+    async function mintInscription(task_id: number, s: number, e: number, testnet = false) {
+      const inscriptions = await processMSC20Transactions(17677439, s, e, testnet)
       const mints = inscriptions.filter(inscription => inscription.data.op === 'mint')
       for (const { transaction } of mints) {
         for (const address of addresses.keys()) {
@@ -574,8 +582,8 @@ class Tasks {
         }
       }
     }
-    async function createNftCollection(task_id: number, s: number, e: number) {
-      const events = await NFTCollectionEvents(s, e)
+    async function createNftCollection(task_id: number, s: number, e: number, testnet = false) {
+      const events = await NFTCollectionEvents(s, e, testnet)
       for (const event of events) {
         const [from, to, value] = event.args
         for (const address of addresses.keys()) {
@@ -587,10 +595,12 @@ class Tasks {
         }
       }
     }
-    async function mintHexagonInUSA(task_id: number, s: number, e: number) {
+    async function mintHexagonInUSA(task_id: number, s: number, e: number, testnet = false) {
       const hexagons = await getHexagonByAddresses(
-        ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
-        MXCL2Provider,
+        testnet
+          ? ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]
+          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
+        testnet ? GenevaProvider : MXCL2Provider,
         s, e
       )
       for (const { address, hexagon } of hexagons) {
@@ -599,10 +609,12 @@ class Tasks {
         await findOrCreateTask(address, task_id)
       }
     }
-    async function mintHexagonInFrance(task_id: number, s: number, e: number) {
+    async function mintHexagonInFrance(task_id: number, s: number, e: number, testnet = false) {
       const hexagons = await getHexagonByAddresses(
-        ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
-        MXCL2Provider,
+        testnet
+          ? ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]
+          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
+        testnet ? GenevaProvider : MXCL2Provider,
         s, e
       )
       for (const { address, hexagon } of hexagons) {
@@ -632,20 +644,21 @@ class Tasks {
         await findOrCreateTask(operator, task_id)
       }
     }
-    async function mintOneNEOMiner(task_id: number, s: number, e: number) {
-      const mep1004Map = await acquiringNeoM2pro(s, e)
+    async function mintOneNEOMiner(task_id: number, s: number, e: number, testnet = false) {
+      const mep1004Map = await acquiringNeoM2pro(s, e, testnet)
       for (const address of mep1004Map.keys()) {
         const machines = mep1004Map.get(address)
         const lengthByNEO = machines.filter((item) => item.sncode.startsWith('NEO')).length
-        // const lengthByM2X = machines.filter((item) => item.sncode.startsWith('M2X')).length
         if (lengthByNEO)
           await findOrCreateTask(address, task_id)
       }
     }
-    async function setMinerName(task_id: number, s: number, e: number) {
+    async function setMinerName(task_id: number, s: number, e: number, testnet = false) {
       const mep1002 = MEP1002Token__factory.connect(
-        ContractAddr.MXCL2Mainnet[ContractType.MEP1002Token],
-        MXCL2Provider
+        testnet
+          ? ContractAddr.MXCGeneva[ContractType.MEP1002Token]
+          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002Token],
+        testnet ? GenevaProvider : MXCL2Provider
       )
       const mep1004Map = await acquiringNeoM2pro(s, e)
       const updateNameEvents = await mep1002.queryFilter(

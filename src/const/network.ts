@@ -50,6 +50,9 @@ export const ContractAddr = {
       [ContractType.MEP2542]: "0xf01eceed6319423bCC953889CB8F35E7084df1dF",
       [ContractType.MXCERC20L2Bridge]: "0x5F850D2E95076077B4677e6d8cB8a0BCFFB2D26a", // TODO
       [ContractType.NFTCollection]: "0xB0284981a50Aa2e5A4135E25dcE687d1E300bF3a",
+      [ContractType.XSDToken]: "0xd28fce81516dcc53d2e320fd1c78e8449556c4f0",
+      [ContractType.SensorToken]: "0x727A7734afBB01C20681Cdd4F68b98F53ddD521b",
+      [ContractType.MEP1002Token]: "0x1964F08f56b79051fB3AE9a2C4d8D92A059b1237",
     },
     MXCL2Mainnet: {
         [ContractType.LPWAN]: "0x2000777700000000000000000000000000000001",

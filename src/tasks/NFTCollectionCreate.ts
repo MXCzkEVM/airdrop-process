@@ -1,14 +1,18 @@
 import { NFTCollectionV4__factory } from '../../typechain-types'
 import { newCollectionEventEvent } from '../../typechain-types/contracts/NFTCollectionV4/NFTCollectionV4';
-import { ContractAddr, ContractType, MXCL2Provider } from "../const/network";
+import { ContractAddr, ContractType, GenevaProvider, MXCL2Provider } from "../const/network";
 import { Logx } from '../log';
 import { generateBlockRanges } from '../uitls';
 import { findBlockNumberByTimeInterval } from './erc20transfer';
 export default async function NFTCollectionEvents(
   startTime?: number,
-  endTime?: number
+  endTime?: number,
+  testnet?: boolean
 ) {
-  const provider = MXCL2Provider
+  const provider = testnet ? GenevaProvider : MXCL2Provider
+  const address = testnet
+  ? ContractAddr.MXCGeneva[ContractType.NFTCollection]
+  : ContractAddr.MXCL2Mainnet[ContractType.NFTCollection]
   const contract = NFTCollectionV4__factory.connect(
     ContractAddr.MXCL2Mainnet[ContractType.NFTCollection],
     provider

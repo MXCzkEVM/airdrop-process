@@ -52,12 +52,12 @@ export interface ScanCancelJSON {
 export type InscriptionJSON = ScanDeployJSON | ScanMintJSON | ScanTransferJSON | ScanListJSON | ScanCancelJSON
 
 export async function processMSC20Transactions(
-  mainnet = true,
   startBlock: number,
   startTime?: number,
-  endTime?: number
+  endTime?: number,
+  testnet?: boolean
 ) {
-  const provider = mainnet ? MXCL2Provider : GenevaProvider
+  const provider = testnet ? GenevaProvider : MXCL2Provider
   let endBlock = await provider.getBlockNumber();
   if (startTime)
     [startBlock, endBlock] = await findBlockNumberByTimeInterval(

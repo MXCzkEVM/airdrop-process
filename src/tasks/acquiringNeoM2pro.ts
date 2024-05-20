@@ -1,9 +1,10 @@
 import {GraphQLClient} from "graphql-request";
 
 export const neoM2proMainnetGraphClient = new GraphQLClient("https://graph-node.moonchain.com/subgraphs/name/mxczkevm/mep1004-graph");
+export const neoM2proTestnetGraphClient = new GraphQLClient("https://geneva-graph-node.moonchain.com/subgraphs/name/mxczkevm/mep1004-graph");
 
-export default async function (startTime?: number, endTime?: number) {
-
+export default async function (startTime?: number, endTime?: number, testnet = false) {
+  const graphClient = testnet ? neoM2proTestnetGraphClient : neoM2proMainnetGraphClient
   const mep1004Map = new Map<string, {tokenId: string, sncode: string, mep1002TokenId: string}[]>();
 
   let skip = 0
@@ -15,7 +16,7 @@ export default async function (startTime?: number, endTime?: number) {
       startTime && `createBlockTimestamp_gte: "${startTime}"`,
       endTime && `createBlockTimestamp_lte: "${endTime}"`,
     ]
-    const res = await neoM2proMainnetGraphClient.request(`
+    const res = await graphClient.request(`
     query mep1004tokeninfos {
       mep1004TokenInfos(first: 1000,skip: ${skip}, where: {${query.filter(Boolean)}}) {
         id
