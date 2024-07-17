@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import { MXCTasksModel } from "../models";
 
-export async function* generateBlockRanges(startBlock: number, endBlock: number, step: number = 10000) {
+export async function* generateBlockRanges(startBlock: number, endBlock: number, step: number = 5000) {
   let fromBlock = startBlock;
   let toBlock = fromBlock + step;
 
