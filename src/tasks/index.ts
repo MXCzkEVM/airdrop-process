@@ -743,6 +743,9 @@ const init = async () => {
     const all = await MXCAddressesModel.findAll()
     for (let i = 0; i < all.length; i++) {
       addresses.set(all[i].get().address, all[i])
+      // @ts-ignore
+      all[i].changed('updatedAt', true);
+      await all[i].save()
     }
   }
 }
@@ -754,8 +757,6 @@ export const syncMXCL2Addresses = async () => {
     limit: 1
   })
   // @ts-ignore
-  lastOne.changed('updatedAt', true);
-  await lastOne.save();
   if (lastOne !== null) {
     startBlockNumber = lastOne.get().block_number;
   }
