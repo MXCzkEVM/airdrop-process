@@ -753,6 +753,9 @@ export const syncMXCL2Addresses = async () => {
     order: Sequelize.literal('block_number DESC'),
     limit: 1
   })
+  // @ts-ignore
+  lastOne.changed('updatedAt', true);
+  await lastOne.save();
   if (lastOne !== null) {
     startBlockNumber = lastOne.get().block_number;
   }
@@ -912,6 +915,7 @@ export const generateSnapshots = async () => {
     addrSnapShot.set('tasks', JSON.stringify(addrTasks));
     addrSnapShot.set('zks_sum', zks_sum);
     await addrSnapShot.save();
+
 
   }
   Logx.success("Generate snapshot finished")
