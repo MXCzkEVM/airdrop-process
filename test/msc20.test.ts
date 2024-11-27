@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
+import dayjs from 'dayjs'
+import { describe, expect, it } from 'vitest'
 import { processMSC20Transactions } from '../src/tasks/msc20mint'
-import dayjs from "dayjs";
 
 describe('msc20', () => {
   const address = '0x0795D90c6d60F7c77041862E9aE5059B4d5e0d7A'

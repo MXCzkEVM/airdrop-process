@@ -1,7 +1,7 @@
-import { BigNumber } from "ethers"
-import { ContractAddr, ContractType, ETHProvider, SepoliaProvider } from "../const/network"
-import processERC20Transfer from "./erc20transfer"
-import { TransferEvent } from "../../typechain-types/contracts/interfaces/IMintableERC20"
+import type { TransferEvent } from '../../typechain-types/contracts/interfaces/IMintableERC20'
+import { BigNumber } from 'ethers'
+import { ContractAddr, ContractType, ETHProvider, SepoliaProvider } from '../const/network'
+import processERC20Transfer from './erc20transfer'
 
 export interface EthereumTransferMXCRecord {
   value: BigNumber
@@ -9,8 +9,8 @@ export interface EthereumTransferMXCRecord {
 
 export async function bridgeMXCEthereumToZkevm(startTime?: number, endTime?: number, testnet = false) {
   const ethereumTransferMXCRecords = new Map<string, BigNumber>()
-  const Contracts = testnet ? ContractAddr.Sepolia : ContractAddr.Ethereum  
-  const Provider = testnet ? SepoliaProvider  : ETHProvider 
+  const Contracts = testnet ? ContractAddr.Sepolia : ContractAddr.Ethereum
+  const Provider = testnet ? SepoliaProvider : ETHProvider
   await processERC20Transfer(
     Contracts[ContractType.MXCTOKEN],
     Provider,
@@ -25,7 +25,7 @@ export async function bridgeMXCEthereumToZkevm(startTime?: number, endTime?: num
     null,
     Contracts[ContractType.MXCERC20L1Bridge],
     startTime,
-    endTime
+    endTime,
   )
   return ethereumTransferMXCRecords
 }

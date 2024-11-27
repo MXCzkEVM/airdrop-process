@@ -1,14 +1,13 @@
-import { Provider } from "@ethersproject/providers";
-import { findBlockNumberByTimeInterval } from "./erc20transfer";
-import { toUtf8String } from "ethers/lib/utils";
-import { MXCL2Provider, GenevaProvider } from "../const/network";
+import { toUtf8String } from 'ethers/lib/utils'
+import { GenevaProvider, MXCL2Provider } from '../const/network'
+import { findBlockNumberByTimeInterval } from './erc20transfer'
 
 function arange(x1: number, x2: number, stp = 1, z: any[] = [], z0 = z.length) {
   if (!x2)
-    x1 -= x2 = x1;
+    x1 -= x2 = x1
   for (let z1 = z0 + Math.max(Math.ceil((++x2 - x1) / stp), 0); z0 < z1; x1 += stp)
-    z[z0++] = x1;
-  return z;
+    z[z0++] = x1
+  return z
 }
 
 export interface ScanDeployJSON {
@@ -55,16 +54,17 @@ export async function processMSC20Transactions(
   startBlock: number,
   startTime?: number,
   endTime?: number,
-  testnet?: boolean
+  testnet?: boolean,
 ) {
   const provider = testnet ? GenevaProvider : MXCL2Provider
-  let endBlock = await provider.getBlockNumber();
-  if (startTime)
+  let endBlock = await provider.getBlockNumber()
+  if (startTime) {
     [startBlock, endBlock] = await findBlockNumberByTimeInterval(
       provider,
       startTime,
-      endTime
+      endTime,
     )
+  }
   const transactions: any[] = []
   for (const blockNumber of arange(startBlock, endBlock)) {
     const block = await provider.getBlock(blockNumber)
@@ -73,7 +73,6 @@ export async function processMSC20Transactions(
     }
   }
 
-
   console.log('find transaction details start')
 
   return transactions
@@ -81,7 +80,7 @@ export async function processMSC20Transactions(
     .map((transaction) => {
       return {
         data: JSON.parse(toUtf8String(transaction.data)) as InscriptionJSON,
-        transaction: transaction,
+        transaction,
       }
     })
 }

@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "moduleResolution":"Node",
     "module": "ES6",
+    "moduleResolution": "Node",
     "noImplicitAny": true,
-    "removeComments": true,
     "preserveConstEnums": true,
+    "removeComments": true,
     "sourceMap": true,
     "allowSyntheticDefaultImports": true
   },

@@ -1,24 +1,25 @@
+import type { newCollectionEventEvent } from '../../typechain-types/contracts/NFTCollectionV4/NFTCollectionV4'
 import { NFTCollectionV4__factory } from '../../typechain-types'
-import { newCollectionEventEvent } from '../../typechain-types/contracts/NFTCollectionV4/NFTCollectionV4';
-import { ContractAddr, ContractType, GenevaProvider, MXCL2Provider } from "../const/network";
-import { Logx } from '../log';
-import { generateBlockRanges } from '../uitls';
-import { findBlockNumberByTimeInterval } from './erc20transfer';
+import { ContractAddr, ContractType, GenevaProvider, MXCL2Provider } from '../const/network'
+import { Logx } from '../log'
+import { generateBlockRanges } from '../uitls'
+import { findBlockNumberByTimeInterval } from './erc20transfer'
+
 export default async function NFTCollectionEvents(
   startTime?: number,
   endTime?: number,
-  testnet?: boolean
+  testnet?: boolean,
 ) {
   const provider = testnet ? GenevaProvider : MXCL2Provider
   const address = testnet
-  ? ContractAddr.MXCGeneva[ContractType.NFTCollection]
-  : ContractAddr.MXCL2Mainnet[ContractType.NFTCollection]
+    ? ContractAddr.MXCGeneva[ContractType.NFTCollection]
+    : ContractAddr.MXCL2Mainnet[ContractType.NFTCollection]
   const contract = NFTCollectionV4__factory.connect(
     ContractAddr.MXCL2Mainnet[ContractType.NFTCollection],
-    provider
+    provider,
   )
   let startBlock = 17677439
-  let endBlock = await provider.getBlockNumber();
+  let endBlock = await provider.getBlockNumber()
 
   if (startTime)
     [startBlock, endBlock] = await findBlockNumberByTimeInterval(provider, startTime, endTime)
@@ -26,15 +27,16 @@ export default async function NFTCollectionEvents(
   const data = [] as newCollectionEventEvent[]
   for await (const { fromBlock, toBlock } of generateBlockRanges(startBlock, endBlock)) {
     try {
-      let events = await contract.queryFilter(
+      const events = await contract.queryFilter(
         contract.filters.newCollectionEvent(),
         fromBlock,
-        toBlock
-      );
+        toBlock,
+      )
       data.push(...events)
-      Logx.info(`Process Events from block ${fromBlock} to ${toBlock}`);
-    } catch (error) {
-      Logx.error(`Error querying blocks ${fromBlock} to ${toBlock}:`, error.message);
+      Logx.info(`Process Events from block ${fromBlock} to ${toBlock}`)
+    }
+    catch (error) {
+      Logx.error(`Error querying blocks ${fromBlock} to ${toBlock}:`, error.message)
     }
   }
   return data

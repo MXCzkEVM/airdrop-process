@@ -503,8 +503,6 @@ class Tasks {
   static processDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks()
 
-    const xsd = ContractAddr.MXCL2Mainnet[ContractType.XSDToken]
-
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
       'testnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e, true),
@@ -531,10 +529,11 @@ class Tasks {
     }
 
     for (const task of publishedTasks) {
-      const s = dayjs.unix(task.expiredAt).day(1).hour(0).minute(0).second(0).unix()
-      const e = dayjs.unix(task.expiredAt).day(6).hour(59).minute(59).second(59).unix()
-      console.log('s: ', dayjs.unix(s).format())
-      await parseCalls?.[parseTankUID(task)]?.(task.id, s, e)
+      const s = dayjs.unix(task.expiredAt).subtract(1, 'week').day(1).hour(0).minute(0).second(0).unix()
+      const e = dayjs.unix(task.expiredAt).subtract(1, 'week').day(6).hour(59).minute(59).second(59).unix()
+      const u = parseTankUID(task)
+      console.log('deadline task uid: ', u)
+      await parseCalls?.[u]?.(task.id, s, e)
     }
 
     async function bridge2500MXC(task_id: number, s: number, e: number, testnet = false) {
@@ -699,7 +698,6 @@ class Tasks {
       for (const address of inHeldCRABAddresses)
         await findOrCreateTask(address, task_id)
     }
-
     async function findOrCreateTask(address: string, id: string | number) {
       await MXCAddressTaskModel.findOrCreate({
         where: { address: ethers.utils.getAddress(address), task_id: id },
@@ -875,28 +873,28 @@ export async function syncMXCL2Addresses() {
 }
 
 export async function processAll() {
-  await init()
-  await syncMXCL2Addresses()
-  await Tasks.processTask1()
-  await Tasks.processTask2()
-  await Tasks.processTask5()
-  await Tasks.processTask9()
-  await Tasks.processTask11()
-  await Tasks.processTask14()
-  await Tasks.processTask18()
-  await Tasks.processTask23()
-  await Tasks.processTask28()
-  await Tasks.processTask33()
-  await Tasks.processTask38()
-  await Tasks.processTask41()
+  // await init();
+  // await syncMXCL2Addresses();
+  // await Tasks.processTask1();
+  // await Tasks.processTask2();
+  // await Tasks.processTask5();
+  // await Tasks.processTask9();
+  // await Tasks.processTask11();
+  // await Tasks.processTask14();
+  // await Tasks.processTask18();
+  // await Tasks.processTask23();
+  // await Tasks.processTask28();
+  // await Tasks.processTask33();
+  // await Tasks.processTask38();
+  // await Tasks.processTask41();
   // await Tasks.processTask61();
   // await Tasks.processTask62();
-  await Tasks.processTask63()
-  await Tasks.processTask66()
-  await Tasks.processTask68()
+  // await Tasks.processTask63();
+  // await Tasks.processTask66();
+  // await Tasks.processTask68();
   await Tasks.parseDeadlineTasks()
   await Tasks.processDeadlineTasks()
-  await generateSnapshots()
+  // await generateSnapshots();
 }
 
 export async function generateSnapshots() {

@@ -1,13 +1,13 @@
-import { GraphQLClient } from "graphql-request";
+import { GraphQLClient } from 'graphql-request'
 
-const queryClient = new GraphQLClient("https://graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev");
-const testnetQueryClient = new GraphQLClient("https://geneva-graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev");
+const queryClient = new GraphQLClient('https://graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev')
+const testnetQueryClient = new GraphQLClient('https://geneva-graph-node.moonchain.com/subgraphs/name/ianlapham/uniswap-v2-dev')
 
 export async function getMXCSwapAddresses() {
-  let skip = 0;
-  let addresses: string[] = [];
+  let skip = 0
+  let addresses: string[] = []
   for (let i = 0; i < 100; i++) {
-    skip = i * 1000;
+    skip = i * 1000
     const res = await queryClient.request(`
         query users {
           users(first: 1000, skip:${skip}) {
@@ -17,31 +17,30 @@ export async function getMXCSwapAddresses() {
       users: { id: string }[]
     }
     if (res.users.length === 0) {
-      break;
+      break
     }
     addresses = [...addresses, ...res.users.map(item => item.id)]
   }
-  return addresses;
+  return addresses
 }
 
 export default async function (address: string) {
-  let skip = 0;
-  let result = 0;
+  let skip = 0
+  let result = 0
   for (let i = 0; i < 100; i++) {
-    skip = i * 1000;
+    skip = i * 1000
     const res = await queryClient.request(`
         query transactions($user: Bytes!) {
           swaps(orderBy: timestamp, orderDirection: desc, where: {from: $user}, skip: ${skip}, first: 1000) {
             amountUSD
           }
-        }`,
-      { user: address.toLowerCase() }) as unknown as { swaps: { amountUSD: string }[] }
+        }`, { user: address.toLowerCase() }) as unknown as { swaps: { amountUSD: string }[] }
     result = result + res.swaps.reduce((prev, curr) => prev + Number(curr.amountUSD), 0)
     if (res.swaps.length === 0 || res.swaps.length !== 1000) {
-      break;
+      break
     }
   }
-  return result;
+  return result
 }
 
 export async function swapExactMXCForTokens(
@@ -49,9 +48,9 @@ export async function swapExactMXCForTokens(
   swap?: { from?: string, to?: string },
   startTime?: string | number,
   endTime?: string | number,
-  testnet?: boolean
+  testnet?: boolean,
 ) {
-  let skip = 0;
+  let skip = 0
   const client = testnet ? testnetQueryClient : queryClient
   const data = [] as any[]
   const pairsQuery = [
@@ -66,7 +65,7 @@ export async function swapExactMXCForTokens(
     pairsQuery.length && `pair_: {${pairsQuery}}`,
   ].filter(Boolean)
   for (let i = 0; i < 100; i++) {
-    skip = i * 1000;
+    skip = i * 1000
 
     const { swaps }: any = await client.request(
       `
@@ -104,25 +103,24 @@ export async function swapExactMXCForTokens(
     )
 
     if (swaps.length === 0)
-      break;
+      break
     data.push(...swaps.map((swap: any) => {
       return {
         signer: swap.from,
         from: {
           ...swap.pair.token1,
-          value: swap.amount1In
+          value: swap.amount1In,
         },
         to: {
           ...swap.pair.token0,
-          value: swap.amount0Out
-        }
+          value: swap.amount0Out,
+        },
       }
     }))
-
   }
   return data as {
-    from: { id: string, symbol: string, value: string },
+    from: { id: string, symbol: string, value: string }
     to: { id: string, symbol: string, value: string }
-    signer: string,
+    signer: string
   }[]
 }

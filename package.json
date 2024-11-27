@@ -1,16 +1,18 @@
 {
   "name": "airdropbroad",
+  "type": "module",
   "version": "0.1.0",
   "description": "",
+  "author": "",
+  "license": "ISC",
   "main": "src/index.ts",
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "vitest",
     "coverage": "vitest run --coverage",
     "start": "node --loader ts-node/esm src/index.ts"
   },
-  "type": "module",
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "axios": "^1.6.8",
     "chalk": "^5.3.0",
@@ -27,6 +29,8 @@
     "typescript": "^5.2.2"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.9.2",
+    "eslint": "^9.15.0",
     "ora": "5",
     "vitest": "^1.5.2"
   }
