@@ -1,5 +1,5 @@
 import { BigNumber } from 'ethers'
-import { MXCMarketplace__factory } from '../../typechain-types/factories/contracts/MXCMarketPlace.sol'
+import { MXCMarketplace__factory } from '../typechain/factories/contracts/MXCMarketPlace.sol'
 import { ContractAddr, ContractType, MXCL2Provider } from '../const/network'
 import { Logx } from '../log'
 import { generateBlockRanges } from '../uitls'

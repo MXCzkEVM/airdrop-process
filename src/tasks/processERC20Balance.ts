@@ -1,5 +1,5 @@
 import type { Provider } from '@ethersproject/providers'
-import { ERC20__factory } from '../../typechain-types'
+import { ERC20__factory } from '../typechain'
 import { Logx } from '../log'
 import { generateBlockRanges } from '../uitls'
 

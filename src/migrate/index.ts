@@ -1,9 +1,9 @@
+/* eslint-disable unicorn/error-message */
 import { Op } from 'sequelize'
-import { DB } from '../db'
-import { MigrationsModel, MXCAddressesModel, MXCTasksModel } from '../models'
+import { Models, sequelize } from '../common'
 
 export default async function () {
-  await DB.sync({ alter: true })
+  await sequelize.sync({ alter: true })
   await addGenevaTasks()
   await genevaTaskTestnetIDTwo()
   await resetTestnetBlockNumber()
@@ -12,7 +12,7 @@ export default async function () {
 export async function addGenevaTasks() {
   const migrated = await migrate()
   if (!migrated) {
-    await MXCTasksModel.bulkCreate([
+    await Models.Tasks.bulkCreate([
       {
         id: 61,
         task_name: 'Possess MOON token in wallet (applicable with 5+ points)',
@@ -75,7 +75,7 @@ export async function addGenevaTasks() {
 export async function genevaTaskTestnetIDTwo() {
   const migrated = await migrate()
   if (!migrated) {
-    await MXCTasksModel.update({
+    await Models.Tasks.update({
       testnet: 2,
     }, {
       where: {
@@ -90,7 +90,7 @@ export async function genevaTaskTestnetIDTwo() {
 export async function resetTestnetBlockNumber() {
   const migrated = await migrate()
   if (!migrated) {
-    await MXCAddressesModel.update({
+    await Models.Addresses.update({
       testnet_block_number: 0,
     }, {
       where: {
@@ -104,13 +104,13 @@ export async function resetTestnetBlockNumber() {
 
 async function migrate() {
   const name = getCallerFunctionName(1)
-  const migrate = await MigrationsModel.findOne({
+  const migrate = await Models.Migrations.findOne({
     where: {
       migrate_name: name,
     },
   })
   if (!migrate) {
-    await MigrationsModel.create({
+    await Models.Migrations.create({
       migrate_name: name,
     })
   }

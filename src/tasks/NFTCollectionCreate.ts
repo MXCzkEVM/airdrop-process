@@ -1,5 +1,5 @@
-import type { newCollectionEventEvent } from '../../typechain-types/contracts/NFTCollectionV4/NFTCollectionV4'
-import { NFTCollectionV4__factory } from '../../typechain-types'
+import type { newCollectionEventEvent } from '../typechain/contracts/NFTCollectionV4/NFTCollectionV4'
+import { NFTCollectionV4__factory } from '../typechain'
 import { ContractAddr, ContractType, GenevaProvider, MXCL2Provider } from '../const/network'
 import { Logx } from '../log'
 import { generateBlockRanges } from '../uitls'

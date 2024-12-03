@@ -1,4 +1,4 @@
-import type { TransferEvent } from '../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20'
+import type { TransferEvent } from '../typechain/@openzeppelin/contracts/token/ERC20/IERC20'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { BigNumber, Contract, ethers } from 'ethers'
@@ -6,24 +6,13 @@ import { parseEther } from 'ethers/lib/utils'
 import { cellToLatLng } from 'h3-js'
 import moment from 'moment-timezone'
 import { Sequelize } from 'sequelize'
-import { MEP1002Token__factory } from '../../typechain-types'
-import erc20factory from '../const/contracts/erc20factory'
-import {
-  ContractAddr,
-  ContractType,
-  ETHProvider,
-  GenevaProvider,
-  MXCL2Provider,
-  SepoliaProvider,
-} from '../const/network'
-import { Logx } from '../log'
+import { graphQLClients, Logger, Models, providers } from '../common'
+
+import { addresses, chains, fragments } from '../config'
 import migrate from '../migrate'
-import { MXCAddressTaskModel } from '../models'
-import { MXCAddressesModel } from '../models/mxc_addresses'
-import { MXCSnapShotsModel } from '../models/mxc_snapshots'
-import { MXCTasksModel } from '../models/mxc_tasks'
+import { MEP1002Token__factory } from '../typechain'
 import { getPublishedTasks, isInFrance, isInUSA, parseTankUID, scientificToDecimal } from '../uitls'
-import acquiringMNS, { getMNSAddresses, mnsGenevaGraphClient, mnsMainnetGraphClient } from './acquiringMNS'
+import acquiringMNS, { getMNSAddresses } from './acquiringMNS'
 import acquiringNeoM2pro from './acquiringNeoM2pro'
 import { bridgeMXCEthereumToZkevm } from './bridgeMXCEthereumToZkevm'
 import bridgingMoreThanValueOfAssets from './bridgingMoreThanValueOfAssets'
@@ -37,23 +26,23 @@ import providingLiquidityOnMXCSwap from './providingLiquidityOnMXCSwap'
 import tradeVolumnOnMXCSwap, { swapExactMXCForTokens } from './tradeVolumnOnMXCSwap'
 import tradeVolumnOnNFTMarketplace from './tradeVolumnOnNFTMarketplace'
 
-export const addresses: Map<string, MXCAddressesModel> = new Map()
+export const addressesModels: Map<string, Models.Addresses> = new Map()
 
 class Tasks {
   static processTask1 = async (task_id = 1, time?: number) => {
     await processERC20Transfer(
-      ContractAddr.Ethereum[ContractType.MXCTOKEN],
-      ETHProvider,
+      addresses[chains.ethereum.id].MXCTOKEN,
+      providers[chains.ethereum.id],
       17677439,
       async (events: TransferEvent[]) => {
         for (let i = 0; i < events.length; i++) {
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address: events[i].args.from, task_id },
           })
         }
       },
       null,
-      ContractAddr.Ethereum[ContractType.MXCERC20L1Bridge],
+      addresses[chains.ethereum.id].MXCERC20L1Bridge,
       time,
     )
   }
@@ -61,20 +50,20 @@ class Tasks {
   // transaction during 2,3,4
   static processTask2 = async () => {
     const monthSeconds = 2592000
-    for (const address of addresses.keys()) {
-      const between = moment(addresses.get(address).dataValues.last_transaction_time).unix() - moment(addresses.get(address).dataValues.first_transaction_time).unix()
+    for (const address of addressesModels.keys()) {
+      const between = moment(addressesModels.get(address).dataValues.last_transaction_time).unix() - moment(addressesModels.get(address).dataValues.first_transaction_time).unix()
       if (between > 2 * monthSeconds) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 2 },
         })
       }
       if (between > 3 * monthSeconds) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 3 },
         })
       }
       if (between > 4 * monthSeconds) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 4 },
         })
       }
@@ -89,12 +78,12 @@ class Tasks {
       30: 7,
       100: 8,
     }
-    for (const address of addresses.keys()) {
-      const count = await MXCL2Provider.getTransactionCount(address)
+    for (const address of addressesModels.keys()) {
+      const count = await providers[chains.moonchain.id].getTransactionCount(address)
       for (const amount of Object.keys(taskIds)) {
         if (count >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -104,15 +93,15 @@ class Tasks {
 
   // More than N dApp interactions
   static processTask9 = async () => {
-    for (const address of addresses.keys()) {
-      const dapp_interactions = addresses.get(address).get().dapp_interactions || []
+    for (const address of addressesModels.keys()) {
+      const dapp_interactions = addressesModels.get(address).get().dapp_interactions || []
       if (dapp_interactions.length >= 2) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 9 },
         })
       }
       if (dapp_interactions.length >= 3) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 10 },
         })
       }
@@ -121,22 +110,22 @@ class Tasks {
 
   // Acquiring MNS  11-13
   static processTask11 = async () => {
-    const addresses = await getMNSAddresses(mnsMainnetGraphClient)
+    const mnsAddresses = await getMNSAddresses(graphQLClients.mnsMainnet)
 
-    for (let i = 0; i < addresses.length; i++) {
-      const mns = await acquiringMNS(mnsMainnetGraphClient, addresses[i])
-      await MXCAddressTaskModel.findOrCreate({
-        where: { address: ethers.utils.getAddress(addresses[i]), task_id: 11 },
+    for (let i = 0; i < mnsAddresses.length; i++) {
+      const mns = await acquiringMNS(graphQLClients.mnsMainnet, mnsAddresses[i])
+      await Models.AddressTask.findOrCreate({
+        where: { address: ethers.utils.getAddress(mnsAddresses[i]), task_id: 11 },
       })
       if (mns.length >= 3) {
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address: ethers.utils.getAddress(addresses[i]), task_id: 12 },
+        await Models.AddressTask.findOrCreate({
+          where: { address: ethers.utils.getAddress(mnsAddresses[i]), task_id: 12 },
         })
       }
       for (let j = 0; j < mns.length; j++) {
         if (mns[j].domain.labelName !== '' && mns[j].domain.labelName.length <= 4) {
-          await MXCAddressTaskModel.findOrCreate({
-            where: { address: ethers.utils.getAddress(addresses[i]), task_id: 13 },
+          await Models.AddressTask.findOrCreate({
+            where: { address: ethers.utils.getAddress(mnsAddresses[i]), task_id: 13 },
           })
         }
       }
@@ -150,12 +139,12 @@ class Tasks {
       500000: 16,
       1000000: 17,
     }
-    for (const address of addresses.keys()) {
-      const value = scientificToDecimal(addresses.get(address).get().transaction_aggregate_value_mxc)
+    for (const address of addressesModels.keys()) {
+      const value = scientificToDecimal(addressesModels.get(address).get().transaction_aggregate_value_mxc)
       for (const amount of Object.keys(taskIds)) {
         if (BigNumber.from(value || 0).gte(parseEther(amount))) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -177,7 +166,7 @@ class Tasks {
       for (const amount of Object.keys(taskIds)) {
         if (addressMap.get(address).value.gte(parseEther(amount))) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -194,13 +183,13 @@ class Tasks {
       10000000: 26,
       25000000: 27,
     }
-    for (const address of addresses.keys()) {
+    for (const address of addressesModels.keys()) {
       const tradeVolumnUSD = await tradeVolumnOnMXCSwap(address)
       const tradeMXC = tradeVolumnUSD
       for (const amount of Object.keys(taskIds)) {
         if (tradeMXC >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -224,7 +213,7 @@ class Tasks {
       for (const amount of Object.keys(taskIds)) {
         if (v.gte(parseEther(amount))) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -241,13 +230,13 @@ class Tasks {
       20000000: 36,
       50000000: 37,
     }
-    for (const address of addresses.keys()) {
+    for (const address of addressesModels.keys()) {
       const lpUSD = await providingLiquidityOnMXCSwap(address, ['0xb6b9be6e9645ede1e92e5c4a8b9f21cf09c43207', '0x0079e51773f3cd803188119b7bf18a415fbc53b4'])
       const lpMXC = lpUSD
       for (const amount of Object.keys(taskIds)) {
         if (lpMXC >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -257,7 +246,7 @@ class Tasks {
 
   // Minting N hexagon 38-40
   static processTask38 = async () => {
-    const hexagons = await getHexagonByAddresses(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider)
+    const hexagons = await getHexagonByAddresses(addresses[chains.moonchain.id].MEP1002NamingToken, providers[chains.moonchain.id])
 
     const taskIds = {
       1: 38,
@@ -265,11 +254,11 @@ class Tasks {
       3: 40,
     }
     for (let i = 0; i < hexagons.length; i++) {
-      const balance = await processHexagonBalance(ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken], MXCL2Provider, hexagons[i].address)
+      const balance = await processHexagonBalance(addresses[chains.moonchain.id].MEP1002NamingToken, providers[chains.moonchain.id], hexagons[i].address)
       for (const amount of Object.keys(taskIds)) {
         if (balance >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: {
               address: ethers.utils.getAddress(hexagons[i].address),
               task_id: taskId,
@@ -282,14 +271,14 @@ class Tasks {
 
   // XSD balance
   static processTask41 = async () => {
-    const addresses = await getERC20Addresses(ContractAddr.MXCL2Mainnet[ContractType.XSDToken], MXCL2Provider)
+    const erc20addresses = await getERC20Addresses(addresses[chains.moonchain.id].XSDToken, providers[chains.moonchain.id])
 
-    for (let i = 0; i < addresses.length; i++) {
-      const balance = await processERC20Balance(ContractAddr.MXCL2Mainnet[ContractType.XSDToken], MXCL2Provider, addresses[i])
+    for (let i = 0; i < erc20addresses.length; i++) {
+      const balance = await processERC20Balance(addresses[chains.moonchain.id].XSDToken, providers[chains.moonchain.id], erc20addresses[i])
 
       if (balance.gte(BigNumber.from(1000).mul(BigNumber.from(10).pow(18)))) {
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address: ethers.utils.getAddress(addresses[i]), task_id: 41 },
+        await Models.AddressTask.findOrCreate({
+          where: { address: ethers.utils.getAddress(erc20addresses[i]), task_id: 41 },
         })
       }
     }
@@ -297,11 +286,11 @@ class Tasks {
 
   // moon token
   static processTask61 = async () => {
-    for (const address of addresses.keys()) {
-      const balance = await processERC20Balance(ContractAddr.MXCGeneva[ContractType.MOONToken], GenevaProvider, address)
+    for (const address of addressesModels.keys()) {
+      const balance = await processERC20Balance(addresses[chains.geneva.id].MOONToken, providers[chains.geneva.id], address)
 
       if (balance.gte(BigNumber.from(10).pow(18))) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 61 },
           defaults: {
             times: balance.div(BigNumber.from(10).pow(18)).toNumber(),
@@ -314,13 +303,21 @@ class Tasks {
   // Bridging funds into geneva Testnet
   static processTask62 = async (task_id = 62, time?: number) => {
     // L1 -> L2
-    await processERC20Transfer(ContractAddr.Sepolia[ContractType.MXCTOKEN], SepoliaProvider, 3854984, async (events: TransferEvent[]) => {
-      for (let i = 0; i < events.length; i++) {
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address: events[i].args.from, task_id },
-        })
-      }
-    }, null, ContractAddr.Sepolia[ContractType.MXCERC20L1Bridge], time)
+    await processERC20Transfer(
+      addresses[chains.sepolia.id].MXCTOKEN,
+      providers[chains.sepolia.id],
+      3854984,
+      async (events: TransferEvent[]) => {
+        for (let i = 0; i < events.length; i++) {
+          await Models.AddressTask.findOrCreate({
+            where: { address: events[i].args.from, task_id },
+          })
+        }
+      },
+      null,
+      addresses[chains.sepolia.id].MXCERC20L1Bridge,
+      time,
+    )
   }
 
   // geneva transaction count 63-65
@@ -330,12 +327,12 @@ class Tasks {
       5: 64,
       10: 65,
     }
-    for (const address of addresses.keys()) {
-      const count = await GenevaProvider.getTransactionCount(address)
+    for (const address of addressesModels.keys()) {
+      const count = await providers[chains.geneva.id].getTransactionCount(address)
       for (const amount of Object.keys(taskIds)) {
         if (count >= Number(amount)) {
           const taskId = taskIds[amount as unknown as keyof typeof taskIds] as number
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id: taskId },
           })
         }
@@ -345,15 +342,15 @@ class Tasks {
 
   // geneva dapp 66-67
   static processTask66 = async () => {
-    for (const address of addresses.keys()) {
-      const dapp_interactions = addresses.get(address).get().testnet_dapp_interactions || []
+    for (const address of addressesModels.keys()) {
+      const dapp_interactions = addressesModels.get(address).get().testnet_dapp_interactions || []
       if (dapp_interactions.length >= 1) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 66 },
         })
       }
       if (dapp_interactions.length >= 2) {
-        await MXCAddressTaskModel.findOrCreate({
+        await Models.AddressTask.findOrCreate({
           where: { address, task_id: 67 },
         })
       }
@@ -362,16 +359,16 @@ class Tasks {
 
   // Acquiring MNS  68-69
   static processTask68 = async () => {
-    const addresses = await getMNSAddresses(mnsGenevaGraphClient)
+    const mnsAddresses = await getMNSAddresses(graphQLClients.mnsTestnet)
 
-    for (let i = 0; i < addresses.length; i++) {
-      const mns = await acquiringMNS(mnsGenevaGraphClient, addresses[i])
-      await MXCAddressTaskModel.findOrCreate({
-        where: { address: ethers.utils.getAddress(addresses[i]), task_id: 68 },
+    for (let i = 0; i < mnsAddresses.length; i++) {
+      const mns = await acquiringMNS(graphQLClients.mnsTestnet, mnsAddresses[i])
+      await Models.AddressTask.findOrCreate({
+        where: { address: ethers.utils.getAddress(mnsAddresses[i]), task_id: 68 },
       })
       if (mns.length >= 3) {
-        await MXCAddressTaskModel.findOrCreate({
-          where: { address: ethers.utils.getAddress(addresses[i]), task_id: 69 },
+        await Models.AddressTask.findOrCreate({
+          where: { address: ethers.utils.getAddress(mnsAddresses[i]), task_id: 69 },
         })
       }
     }
@@ -436,34 +433,34 @@ class Tasks {
       }
 
       if (task51)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 51 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 51 } })
 
       if (task52)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 52 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 52 } })
 
       if (task53)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 53 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 53 } })
 
       if (task54)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 54 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 54 } })
 
       if (task55)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 55 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 55 } })
 
       if (task56)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 56 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 56 } })
 
       if (task57)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 57 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 57 } })
 
       if (task58)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 58 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 58 } })
 
       if (task59)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 59 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 59 } })
 
       if (task60)
-        await MXCAddressTaskModel.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 60 } })
+        await Models.AddressTask.findOrCreate({ where: { address: ethers.utils.getAddress(address), task_id: 60 } })
     }
   }
 
@@ -477,7 +474,7 @@ class Tasks {
 
     // filter same tasks
     const publishingTasks = dashboardTanks.filter(task =>
-      !publishedTasks.some(it => parseTankUID(it) === parseTankUID(task)),
+      !publishedTasks.some((it: any) => parseTankUID(it) === parseTankUID(task)),
     )
 
     if (!publishingTasks.length)
@@ -493,17 +490,15 @@ class Tasks {
       }
     })
 
-    const processes = publishingHandleTasks.map(task => MXCTasksModel.create(task))
+    const processes = publishingHandleTasks.map(task => Models.Tasks.create(task))
     await Promise.all(processes)
 
-    console.log('Published from the tasks dashboard: ')
-    publishingTasks.forEach(t => console.log(`task:${parseTankUID(t)} - name:${t.name}`))
+    Logger.info('Published from the tasks dashboard: ')
+    publishingTasks.forEach(t => Logger.info(`task:${parseTankUID(t)} - name:${t.name}`))
   }
 
   static processDeadlineTasks = async () => {
     const publishedTasks = await getPublishedTasks()
-
-    const xsd = ContractAddr.MXCL2Mainnet[ContractType.XSDToken]
 
     const parseCalls: Record<string, any> = {
       'mainnet_week-01': (id: any, s: number, e: number) => bridge2500MXC(id, s, e),
@@ -533,7 +528,7 @@ class Tasks {
     for (const task of publishedTasks) {
       const s = dayjs.unix(task.expiredAt).day(1).hour(0).minute(0).second(0).unix()
       const e = dayjs.unix(task.expiredAt).day(6).hour(59).minute(59).second(59).unix()
-      console.log('s: ', dayjs.unix(s).format())
+      // console.log('s: ', dayjs.unix(s).format())
       await parseCalls?.[parseTankUID(task)]?.(task.id, s, e)
     }
 
@@ -546,7 +541,7 @@ class Tasks {
       }
     }
     async function swap(task_id: number, s: number, e: number, testnet = false) {
-      for (const address of addresses.keys()) {
+      for (const address of addressesModels.keys()) {
         const swaps = await swapExactMXCForTokens(address, undefined, s, e, testnet)
         if (!swaps.length)
           continue
@@ -555,9 +550,9 @@ class Tasks {
     }
     async function swapWithToSensor1000(task_id: number, s: number, e: number, testnet = false) {
       const contract = testnet
-        ? ContractAddr.MXCGeneva[ContractType.SensorToken]
-        : ContractAddr.MXCL2Mainnet[ContractType.SensorToken]
-      for (const address of addresses.keys()) {
+        ? addresses[chains.geneva.id].SensorToken
+        : addresses[chains.moonchain.id].SensorToken
+      for (const address of addressesModels.keys()) {
         const swaps = await swapExactMXCForTokens(address, { to: contract }, s, e, testnet)
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 1000)
@@ -567,9 +562,9 @@ class Tasks {
     }
     async function swapWithToXsd5000(task_id: number, s: number, e: number, testnet = false) {
       const contract = testnet
-        ? ContractAddr.MXCGeneva[ContractType.XSDToken]
-        : ContractAddr.MXCL2Mainnet[ContractType.XSDToken]
-      for (const address of addresses.keys()) {
+        ? addresses[chains.geneva.id].XSDToken
+        : addresses[chains.moonchain.id].XSDToken
+      for (const address of addressesModels.keys()) {
         const swaps = await swapExactMXCForTokens(address, { to: contract }, s, e, testnet)
         const balance = swaps.reduce((p, c) => p + Number(c.to.value), 0)
         if (balance < 5000)
@@ -581,10 +576,10 @@ class Tasks {
       const inscriptions = await processMSC20Transactions(17677439, s, e, testnet)
       const mints = inscriptions.filter(inscription => inscription.data.op === 'mint')
       for (const { transaction } of mints) {
-        for (const address of addresses.keys()) {
+        for (const address of addressesModels.keys()) {
           if (address.toLowerCase() !== transaction.from.toLowerCase())
             continue
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id },
           })
         }
@@ -593,11 +588,11 @@ class Tasks {
     async function createNftCollection(task_id: number, s: number, e: number, testnet = false) {
       const events = await NFTCollectionEvents(s, e, testnet)
       for (const event of events) {
-        const [from, to, value] = event.args
-        for (const address of addresses.keys()) {
+        const [from, _to, _value] = event.args
+        for (const address of addressesModels.keys()) {
           if (address.toLowerCase() !== from.toLowerCase())
             continue
-          await MXCAddressTaskModel.findOrCreate({
+          await Models.AddressTask.findOrCreate({
             where: { address, task_id },
           })
         }
@@ -606,9 +601,9 @@ class Tasks {
     async function mintHexagonInUSA(task_id: number, s: number, e: number, testnet = false) {
       const hexagons = await getHexagonByAddresses(
         testnet
-          ? ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]
-          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
-        testnet ? GenevaProvider : MXCL2Provider,
+          ? addresses[chains.geneva.id].MEP1002NamingToken
+          : addresses[chains.moonchain.id].MEP1002NamingToken,
+        testnet ? providers[chains.geneva.id] : providers[chains.moonchain.id],
         s,
         e,
       )
@@ -621,9 +616,9 @@ class Tasks {
     async function mintHexagonInFrance(task_id: number, s: number, e: number, testnet = false) {
       const hexagons = await getHexagonByAddresses(
         testnet
-          ? ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]
-          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken],
-        testnet ? GenevaProvider : MXCL2Provider,
+          ? addresses[chains.geneva.id].MEP1002NamingToken
+          : addresses[chains.moonchain.id].MEP1002NamingToken,
+        testnet ? providers[chains.geneva.id] : providers[chains.moonchain.id],
         s,
         e,
       )
@@ -634,12 +629,13 @@ class Tasks {
       }
     }
     async function createOneTokens(task_id: number, s: number, e: number) {
-      const provider = MXCL2Provider
+      const provider = providers[chains.moonchain.id]
       const contract = new Contract(
-        erc20factory.address,
-        erc20factory.abi,
+        addresses[chains.moonchain.id].ERC20Factory,
+        fragments.ERC20Factory,
         provider,
       )
+
       const [fromBlock, toBlock] = await findBlockNumberByTimeInterval(
         provider,
         s,
@@ -667,9 +663,9 @@ class Tasks {
     async function setMinerName(task_id: number, s: number, e: number, testnet = false) {
       const mep1002 = MEP1002Token__factory.connect(
         testnet
-          ? ContractAddr.MXCGeneva[ContractType.MEP1002Token]
-          : ContractAddr.MXCL2Mainnet[ContractType.MEP1002Token],
-        testnet ? GenevaProvider : MXCL2Provider,
+          ? addresses[chains.geneva.id].MEP1002Token
+          : addresses[chains.moonchain.id].MEP1002Token,
+        testnet ? providers[chains.geneva.id] : providers[chains.moonchain.id],
       )
       const mep1004Map = await acquiringNeoM2pro(s, e)
       const updateNameEvents = await mep1002.queryFilter(
@@ -691,9 +687,9 @@ class Tasks {
     }
     async function holdCRAB30days(task_id: number, s: number, e: number) {
       const inHeldCRABAddresses = await hasHeldTokenInDays(
-        MXCL2Provider,
-        [...addresses.keys()],
-        ContractAddr.MXCL2Mainnet[ContractType.CrabToken],
+        providers[chains.moonchain.id],
+        [...addressesModels.keys()],
+        addresses[chains.moonchain.id].CrabToken,
         e,
       )
       for (const address of inHeldCRABAddresses)
@@ -701,7 +697,7 @@ class Tasks {
     }
 
     async function findOrCreateTask(address: string, id: string | number) {
-      await MXCAddressTaskModel.findOrCreate({
+      await Models.AddressTask.findOrCreate({
         where: { address: ethers.utils.getAddress(address), task_id: id },
       })
     }
@@ -711,7 +707,7 @@ class Tasks {
 export async function processTask(taskID: number) {
   await init()
   await syncMXCL2Addresses()
-  // @ts-ignore
+  // @ts-expect-error
   if (Tasks[`processTask${taskID}`] !== undefined) {
     try {
       // @ts-ignore
@@ -730,32 +726,31 @@ export async function processTask(taskID: number) {
 // also process task id 2,3,4,9,10,47,48
 
 const mainnetDAPPContracts = {
-  [ContractAddr.MXCL2Mainnet[ContractType.MNS]]: 'MNS',
-  [ContractAddr.MXCL2Mainnet[ContractType.MXCAAVEPool]]: 'AAVE',
-  [ContractAddr.MXCL2Mainnet[ContractType.MEP1002NamingToken]]: 'Hexagon',
-  [ContractAddr.MXCL2Mainnet[ContractType.MXCMarketPlace]]: 'NFT',
-  [ContractAddr.MXCL2Mainnet[ContractType.MEP2542]]: 'MEP2542Mining',
-  [ContractAddr.MXCL2Mainnet[ContractType.MXCSwapRouter]]: 'SWAP',
-  [ContractAddr.MXCL2Mainnet[ContractType.MXCERC20L2Bridge]]: 'BridgeL2_L1',
+  [addresses[chains.moonchain.id].MNS]: 'MNS',
+  [addresses[chains.moonchain.id].MXCAAVEPool]: 'AAVE',
+  [addresses[chains.moonchain.id].MEP1002NamingToken]: 'Hexagon',
+  [addresses[chains.moonchain.id].MXCMarketPlace]: 'NFT',
+  [addresses[chains.moonchain.id].MEP2542]: 'MEP2542Mining',
+  [addresses[chains.moonchain.id].MXCSwapRouter]: 'SWAP',
+  [addresses[chains.moonchain.id].MXCERC20L2Bridge]: 'BridgeL2_L1',
 }
 
 const genevaDAPPContracts = {
-  [ContractAddr.MXCGeneva[ContractType.MNS]]: 'MNS',
-  [ContractAddr.MXCGeneva[ContractType.MXCAAVEPool]]: 'AAVE',
-  [ContractAddr.MXCGeneva[ContractType.MEP1002NamingToken]]: 'Hexagon',
-  [ContractAddr.MXCGeneva[ContractType.MXCMarketPlace]]: 'NFT',
-  [ContractAddr.MXCGeneva[ContractType.MEP2542]]: 'MEP2542Mining',
-  [ContractAddr.MXCGeneva[ContractType.MXCSwapRouter]]: 'SWAP',
-  [ContractAddr.MXCGeneva[ContractType.MXCERC20L2Bridge]]: 'BridgeL2_L1',
+  [addresses[chains.geneva.id].MNS]: 'MNS',
+  [addresses[chains.geneva.id].MXCAAVEPool]: 'AAVE',
+  [addresses[chains.geneva.id].MEP1002NamingToken]: 'Hexagon',
+  [addresses[chains.geneva.id].MXCMarketPlace]: 'NFT',
+  [addresses[chains.geneva.id].MEP2542]: 'MEP2542Mining',
+  [addresses[chains.geneva.id].MXCSwapRouter]: 'SWAP',
+  [addresses[chains.geneva.id].MXCERC20L2Bridge]: 'BridgeL2_L1',
 }
 
 async function init() {
   await migrate()
-  if (addresses.size === 0) {
-    const all = await MXCAddressesModel.findAll()
+  if (addressesModels.size === 0) {
+    const all = await Models.Addresses.findAll()
     for (let i = 0; i < all.length; i++) {
-      addresses.set(all[i].get().address, all[i])
-      // @ts-ignore
+      addressesModels.set(all[i].get().address, all[i])
       all[i].changed('updatedAt', true)
       await all[i].save()
     }
@@ -764,7 +759,7 @@ async function init() {
 
 export async function syncMXCL2Addresses() {
   let startBlockNumber = 1
-  const lastOne = await MXCAddressesModel.findOne({
+  const lastOne = await Models.Addresses.findOne({
     order: Sequelize.literal('block_number DESC'),
     limit: 1,
   })
@@ -773,19 +768,19 @@ export async function syncMXCL2Addresses() {
     startBlockNumber = lastOne.get().block_number
   }
   Logx.info('Sync MXCL2 Addresses from', startBlockNumber)
-  let latestBlockNumber = await MXCL2Provider.getBlockNumber()
+  let latestBlockNumber = await providers[chains.moonchain.id].getBlockNumber()
 
   const mainnetAddresses = Object.keys(mainnetDAPPContracts).map(item => item.toLowerCase())
   for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
     Logx.infoStdout(`\r sync ${i}/${latestBlockNumber}`)
-    const block = await MXCL2Provider.getBlockWithTransactions(i)
+    const block = await providers[chains.moonchain.id].getBlockWithTransactions(i)
 
     if (!block || !block.transactions)
       continue
     for (const transaction of block.transactions) {
       const fromAddress = transaction.from
       const toAddress = transaction.to
-      const [addr, created] = await MXCAddressesModel.findOrCreate({
+      const [addr, created] = await Models.Addresses.findOrCreate({
         where: { address: fromAddress },
         defaults: {
           first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
@@ -807,21 +802,21 @@ export async function syncMXCL2Addresses() {
         }
       }
 
-      const receipt = await MXCL2Provider.getTransactionReceipt(transaction.hash)
+      const receipt = await providers[chains.moonchain.id].getTransactionReceipt(transaction.hash)
       const transactionAggregateValueMXC = BigNumber.from(scientificToDecimal(addr.get().transaction_aggregate_value_mxc).toString() || 0)
       addr.set('transaction_aggregate_value_mxc', transactionAggregateValueMXC.add(receipt.gasUsed.mul(transaction.gasPrice)).toString())
       addr.set('block_number', i)
       addr.set('dapp_interactions', JSON.stringify(dapp_interactions))
       addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'))
       await addr.save()
-      addresses.set(addr.get().address, addr)
+      addressesModels.set(addr.get().address, addr)
     }
   }
 
   // geneva
   const genevaAddresses = Object.keys(genevaDAPPContracts).map(item => item.toLowerCase())
 
-  const genevaLastOne = await MXCAddressesModel.findOne({
+  const genevaLastOne = await Models.Addresses.findOne({
     order: Sequelize.literal('testnet_block_number DESC'),
     limit: 1,
   })
@@ -829,11 +824,11 @@ export async function syncMXCL2Addresses() {
   if (genevaLastOne !== null) {
     startBlockNumber = genevaLastOne.get().testnet_block_number
   }
-  latestBlockNumber = await GenevaProvider.getBlockNumber()
+  latestBlockNumber = await providers[chains.geneva.id].getBlockNumber()
   for (let i = startBlockNumber; i <= latestBlockNumber; i++) {
     Logx.infoStdout(`\r sync testnet ${i}/${latestBlockNumber}`)
 
-    const block = await GenevaProvider.getBlockWithTransactions(i)
+    const block = await providers[chains.geneva.id].getBlockWithTransactions(i)
 
     if (!block || !block.transactions)
       continue
@@ -845,7 +840,7 @@ export async function syncMXCL2Addresses() {
         .includes(fromAddress.toLowerCase()) && (latestBlockNumber - startBlockNumber) > 10000) {
         continue
       }
-      const [addr, created] = await MXCAddressesModel.findOrCreate({
+      const [addr, created] = await Models.Addresses.findOrCreate({
         where: { address: fromAddress },
         defaults: {
           first_transaction_time: moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'),
@@ -869,7 +864,7 @@ export async function syncMXCL2Addresses() {
       addr.set('testnet_dapp_interactions', JSON.stringify(testnet_dapp_interactions))
       addr.set('last_transaction_time', moment(new Date(block.timestamp * 1000)).format('YYYY-MM-DD HH:mm:ss.SSS Z'))
       await addr.save()
-      addresses.set(addr.get().address, addr)
+      addressesModels.set(addr.get().address, addr)
     }
   }
 }
@@ -902,21 +897,21 @@ export async function processAll() {
 export async function generateSnapshots() {
   await init()
   Logx.info('Start generate snapshot')
-  const length = addresses.size
+  const length = addressesModels.size
   const i = 0
 
-  const tasks = await MXCTasksModel.findAll()
+  const tasks = await Models.Tasks.findAll()
   const tasksMap = new Map()
   for (let i = 0; i < tasks.length; i++) {
     tasksMap.set(tasks[i].get().id, tasks[i].get())
   }
-  for (const address of addresses.keys()) {
+  for (const address of addressesModels.keys()) {
     Logx.infoStdout(`\r snapshots ${i}/${length}`)
     const [addrSnapShot, find] = await MXCSnapShotsModel.findOrCreate({
       where: { address },
     })
     const addrTasks = []
-    const taskIDs = await MXCAddressTaskModel.findAll({
+    const taskIDs = await Models.AddressTask.findAll({
       where: { address },
     })
     let zks_sum = 0
@@ -933,14 +928,14 @@ export async function generateSnapshots() {
 }
 
 async function generateTask51Table() {
-  await MXCTasksModel.findOrCreate({ where: { id: 51, task_name: 'Own 1 NEO registered on AXS', zks: 10000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 52, task_name: 'Own 2 NEOs registered on AXS', zks: 20000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 53, task_name: 'Own more than 3 NEOs registered on AXS', zks: 50000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 54, task_name: 'Own 5 NEOs registered on AXS', zks: 100000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 55, task_name: 'Own more than 5 NEOs registered on AXS', zks: 300000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 56, task_name: 'Own 1 M2 Pro registered on AXS', zks: 50000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 57, task_name: 'Own more than 2 M2 Pros registered on AXS', zks: 100000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 58, task_name: 'Own more than 3 M2 Pros registered on AXS', zks: 170000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 59, task_name: 'Own 5 M2 Pros registered on AXS', zks: 350000 } })
-  await MXCTasksModel.findOrCreate({ where: { id: 60, task_name: 'Own more than 5 M2 Pros registered on AXS', zks: 500000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 51, task_name: 'Own 1 NEO registered on AXS', zks: 10000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 52, task_name: 'Own 2 NEOs registered on AXS', zks: 20000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 53, task_name: 'Own more than 3 NEOs registered on AXS', zks: 50000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 54, task_name: 'Own 5 NEOs registered on AXS', zks: 100000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 55, task_name: 'Own more than 5 NEOs registered on AXS', zks: 300000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 56, task_name: 'Own 1 M2 Pro registered on AXS', zks: 50000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 57, task_name: 'Own more than 2 M2 Pros registered on AXS', zks: 100000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 58, task_name: 'Own more than 3 M2 Pros registered on AXS', zks: 170000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 59, task_name: 'Own 5 M2 Pros registered on AXS', zks: 350000 } })
+  await Models.Tasks.findOrCreate({ where: { id: 60, task_name: 'Own more than 5 M2 Pros registered on AXS', zks: 500000 } })
 }

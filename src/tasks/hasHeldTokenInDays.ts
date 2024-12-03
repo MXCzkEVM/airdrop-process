@@ -1,7 +1,7 @@
 import type { Provider } from '@ethersproject/providers'
 import dayjs from 'dayjs'
 import { utils } from 'ethers'
-import { ERC20__factory } from '../../typechain-types'
+import { ERC20__factory } from '../typechain'
 import { findBlockNumberByTimeInterval } from './erc20transfer'
 
 export async function hasHeldTokenInDays(provider: Provider, addresses: string[], token: string, time?: number) {

@@ -1,8 +1,11 @@
+/* eslint-disable node/prefer-global/process */
+/* eslint-disable no-console */
 import chalk from 'chalk'
 
 const log = console.log
 const stdOut = process.stdout.write.bind(process.stdout)
-export class Logx {
+
+export class Logger {
   static error(...v: any[]) {
     log(chalk.bold.redBright(v))
   }

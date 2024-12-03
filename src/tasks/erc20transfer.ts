@@ -1,8 +1,8 @@
 import type { Provider } from '@ethersproject/providers'
-import type { TransferEvent } from '../../typechain-types/@openzeppelin/contracts/token/ERC20/ERC20'
+import type { TransferEvent } from '../typechain/@openzeppelin/contracts/token/ERC20/ERC20'
 import dayjs from 'dayjs'
-import { ERC20__factory } from '../../typechain-types'
-import { Logx } from '../log'
+import { Logger } from '../common'
+import { ERC20__factory } from '../typechain'
 import { generateBlockRanges } from '../uitls'
 
 export default async function processERC20Transfer(
@@ -32,10 +32,10 @@ export default async function processERC20Transfer(
         if (await cb(events)) {
           return
         }
-        Logx.info(`Process Events from block ${fromBlock} to ${toBlock}`)
+        Logger.info(`Process Events from block ${fromBlock} to ${toBlock}`)
       }
       catch (error) {
-        Logx.error(`Error querying blocks ${fromBlock} to ${toBlock}:`, error.message)
+        Logger.error(`Error querying blocks ${fromBlock} to ${toBlock}:`, error.message)
       }
     }
   })()
@@ -51,10 +51,10 @@ export async function findBlockNumberByTime(provider: Provider, time: number) {
     mid = Math.floor((low + high) / 2)
     const block = await provider.getBlock(mid)
 
-    console.log(`Searching in range ${low} - ${high}, current mid is ${mid}`)
+    Logger.info(`Searching in range ${low} - ${high}, current mid is ${mid}`)
 
     if (block.timestamp === time) {
-      console.log(`Found exact match at block number ${mid}`)
+      Logger.info(`Found exact match at block number ${mid}`)
       return mid
     }
     else if (block.timestamp < time) {
@@ -66,7 +66,7 @@ export async function findBlockNumberByTime(provider: Provider, time: number) {
   }
 
   const closestBlockNumber = (await provider.getBlock(mid)).timestamp < time ? mid : mid - 1
-  console.log(`No exact match, returning closest lower block number ${closestBlockNumber}`)
+  Logger.info(`No exact match, returning closest lower block number ${closestBlockNumber}`)
   return closestBlockNumber
 }
 
@@ -74,13 +74,13 @@ export async function findBlockNumberByTimeInterval(provider: Provider, startTim
   const currentTime = dayjs().unix()
   const currentBlockNumber = await provider.getBlockNumber()
   endTime = endTime ? Math.min(currentTime, endTime) : currentTime
-  console.log('------------------', 'find start block number', '------------------')
+  Logger.info('------------------', 'find start block number', '------------------')
 
   const from = currentTime >= startTime
     ? await findBlockNumberByTime(provider, startTime)
     : currentBlockNumber - 1
 
-  console.log('------------------', 'find end block number', '------------------')
+  Logger.info('------------------', 'find end block number', '------------------')
 
   const to = endTime
     ? endTime >= currentTime
@@ -88,6 +88,6 @@ export async function findBlockNumberByTimeInterval(provider: Provider, startTim
       : await findBlockNumberByTime(provider, endTime)
     : await provider.getBlockNumber()
 
-  console.log(`find interval block number : [${from}, ${to}]`)
+  Logger.info(`find interval block number : [${from}, ${to}]`)
   return [from, to] as const
 }

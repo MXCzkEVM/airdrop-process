@@ -1,5 +1,5 @@
 import type { Provider } from '@ethersproject/providers'
-import { MEP1002NamingToken__factory } from '../../typechain-types'
+import { MEP1002NamingToken__factory } from '../typechain'
 import { Logx } from '../log'
 import { generateBlockRanges } from '../uitls'
 import { findBlockNumberByTimeInterval } from './erc20transfer'

@@ -1,38 +1,41 @@
-import { GraphQLClient } from 'graphql-request'
+import type { GraphQLClient } from 'graphql-request'
 
-export const mnsMainnetGraphClient = new GraphQLClient('https://graph-node.moonchain.com/subgraphs/name/mnsdomains/mns')
-
-export const mnsGenevaGraphClient = new GraphQLClient('https://geneva-graph-node.moonchain.com/subgraphs/name/mnsdomains/mns')
+export interface GraphResultByDomains {
+  wrappedDomains: {
+    owner: {
+      id: string
+    }
+    domain: {
+      labelName: string
+    }
+  }[]
+}
 
 export async function getMNSAddresses(client: GraphQLClient) {
   let skip = 0
   let addresses: string[] = []
   for (let i = 0; i < 100; i++) {
     skip = i * 1000
-    const res = await client.request(`query getNames {
-            wrappedDomains(skip: ${skip},first: 1000) {
+    const { wrappedDomains } = await client.request<GraphResultByDomains>(
+      `query getNames {
+            wrappedDomains(skip: ${skip}, first: 1000) {
                 owner {
                   id
                 }
             }
-        }`) as unknown as {
-      wrappedDomains: {
-        owner: {
-          id: string
-        }
-      }[]
-    }
-    if (res.wrappedDomains.length === 0) {
+        }`,
+    )
+    if (wrappedDomains.length === 0)
       break
-    }
-    addresses = [...addresses, ...res.wrappedDomains.map(item => item.owner.id)]
+    addresses = [...addresses, ...wrappedDomains.map(item => item.owner.id)]
   }
 
   return addresses
 }
 
 export default async function (client: GraphQLClient, address: string) {
-  const res = await client.request(`query getNames($id: ID!) {
+  const { wrappedDomains } = await client.request<GraphResultByDomains>(
+    `query getNames($id: ID!) {
         wrappedDomains(where: {owner: $id},first: 1000) {
           domain {
             id
@@ -41,12 +44,8 @@ export default async function (client: GraphQLClient, address: string) {
             name
           }
         }
-    }`, { id: address.toLowerCase() }) as unknown as {
-    wrappedDomains: {
-      domain: {
-        labelName: string
-      }
-    }[]
-  }
-  return res.wrappedDomains
+    }`,
+    { id: address.toLowerCase() },
+  )
+  return wrappedDomains
 }

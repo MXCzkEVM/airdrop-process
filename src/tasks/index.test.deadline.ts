@@ -1,4 +1,4 @@
-import type { TransferEvent } from '../../typechain-types/@openzeppelin/contracts/token/ERC20/IERC20'
+import type { TransferEvent } from '../typechain/@openzeppelin/contracts/token/ERC20/IERC20'
 import axios from 'axios'
 import dayjs from 'dayjs'
 import { BigNumber, Contract, ethers } from 'ethers'
@@ -6,7 +6,7 @@ import { parseEther } from 'ethers/lib/utils'
 import { cellToLatLng } from 'h3-js'
 import moment from 'moment-timezone'
 import { Sequelize } from 'sequelize'
-import { MEP1002Token__factory } from '../../typechain-types'
+import { MEP1002Token__factory } from '../typechain'
 import erc20factory from '../const/contracts/erc20factory'
 import {
   ContractAddr,
